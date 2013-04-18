@@ -1,40 +1,117 @@
-defrecord DateTime, year: nil, month: nil, day: nil, hour: nil, minute: nil, sec: nil do
+defmodule DateTime.Utils do
+  def space_two(int) do
+    string = integer_to_binary(int)
+    case String.length(string) do
+      0 -> "  "
+      1 -> " " <> string
+      2 -> string
+      _ -> take_last(string, 2)
+    end
+  end
+
+  def two(int) do
+    string = integer_to_binary(int)
+    case String.length(string) do
+      0 -> "00"
+      1 -> "0" <> string
+      2 -> string
+      _ -> take_last(string, 2)
+    end
+  end
+
+  def three(int) do
+    string = integer_to_binary(int)
+    case String.length(string) do
+      0 -> "000" <> string
+      1 -> "00" <> string
+      2 -> "0" <> string
+      3 -> string
+      _ -> take_last(string, 3)
+    end
+  end
+
+  def four(int) do
+    string = integer_to_binary(int)
+    case String.length(string) do
+      0 -> "0000"
+      1 -> "000" <> string
+      2 -> "00" <> string
+      3 -> "0" <> string
+      4 -> string
+      _ -> take_last(string, 4)
+    end
+  end
+
+  def nine(int) do
+    string = integer_to_binary(int)
+    case String.length(string) do
+      0 -> "000000000"
+      1 -> "00000000" <> string
+      2 -> "0000000" <> string
+      3 -> "000000" <> string
+      4 -> "00000" <> string
+      5 -> "0000" <> string
+      6 -> "000" <> string
+      7 -> "00" <> string
+      8 -> "0" <> string
+      9 -> string
+      _ -> take_last(string, 4)
+    end
+  end
+
+  def take_first(str, num) do
+    String.codepoints(str) |> Enum.take(num) |> Enum.join
+  end
+
+  def take_last(str, num) do
+    String.codepoints(str) |> Enum.reverse |> Enum.take(num) |> Enum.reverse |> Enum.join
+  end
+
+  def add_zero(str, num) do
+    str <> String.duplicate("0", num)
+  end
+end
+
+defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, nanosec: 0 do
+  import DateTime.Utils
+
   @days_of_week_name [{ 0, "Sunday" }, { 1, "Monday" }, { 2, "Tuesday" }, { 3, "Wednesday" }, { 4, "Thursday" }, { 5, "Friday" }, { 6, "saturday" }]
   @days_of_week_name_short [{ 0, "Sun" }, { 1, "Mon" }, { 2, "Tue" }, { 3, "Wed" }, { 4, "Thu" }, { 5, "Fri" }, { 6, "sat" }]
   @month_name [{ 1, "January" }, { 2, "February" }, { 3, "March" }, { 4, "April" }, { 5, "May" }, { 6, "June" }, { 7, "July" }, { 8, "August" }, { 9, "September" }, { 10, "October" }, { 11, "November" }, { 12, "December" }]
   @month_name_short [{ 1, "Jan" }, { 2, "Feb" }, { 3, "Mar" }, { 4, "Apr" }, { 5, "May" }, { 6, "Jun" }, { 7, "Jul" }, { 8, "Aug" }, { 9, "Sep" }, { 10, "Oct" }, { 11, "Nov" }, { 12, "Dec" }]
   @common_year_yday_offset [
-    { 1,  -1 },
-    { 2,  -1 + 31 },
-    { 3,  -1 + 31 + 28 },
-    { 4,  -1 + 31 + 28 + 31 },
-    { 5,  -1 + 31 + 28 + 31 + 30 },
-    { 6,  -1 + 31 + 28 + 31 + 30 + 31 },
-    { 7,  -1 + 31 + 28 + 31 + 30 + 31 + 30 },
-    { 8,  -1 + 31 + 28 + 31 + 30 + 31 + 30 + 31 },
-    { 9,  -1 + 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 },
-    { 10, -1 + 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 },
-    { 11, -1 + 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 },
-    { 12, -1 + 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 }
+    { 1,  0 },
+    { 2,  0 + 31 },
+    { 3,  0 + 31 + 28 },
+    { 4,  0 + 31 + 28 + 31 },
+    { 5,  0 + 31 + 28 + 31 + 30 },
+    { 6,  0 + 31 + 28 + 31 + 30 + 31 },
+    { 7,  0 + 31 + 28 + 31 + 30 + 31 + 30 },
+    { 8,  0 + 31 + 28 + 31 + 30 + 31 + 30 + 31 },
+    { 9,  0 + 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 },
+    { 10, 0 + 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 },
+    { 11, 0 + 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 },
+    { 12, 0 + 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 }
   ]
   @leap_year_yday_offset [
-    { 1,  -1 },
-    { 2,  -1 + 31 },
-    { 3,  -1 + 31 + 29 },
-    { 4,  -1 + 31 + 29 + 31 },
-    { 5,  -1 + 31 + 29 + 31 + 30 },
-    { 6,  -1 + 31 + 29 + 31 + 30 + 31 },
-    { 7,  -1 + 31 + 29 + 31 + 30 + 31 + 30 },
-    { 8,  -1 + 31 + 29 + 31 + 30 + 31 + 30 + 31 },
-    { 9,  -1 + 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 },
-    { 10, -1 + 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 },
-    { 11, -1 + 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 },
-    { 12, -1 + 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 }
+    { 1,  0 },
+    { 2,  0 + 31 },
+    { 3,  0 + 31 + 29 },
+    { 4,  0 + 31 + 29 + 31 },
+    { 5,  0 + 31 + 29 + 31 + 30 },
+    { 6,  0 + 31 + 29 + 31 + 30 + 31 },
+    { 7,  0 + 31 + 29 + 31 + 30 + 31 + 30 },
+    { 8,  0 + 31 + 29 + 31 + 30 + 31 + 30 + 31 },
+    { 9,  0 + 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 },
+    { 10, 0 + 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 },
+    { 11, 0 + 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 },
+    { 12, 0 + 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 }
   ]
 
   def now do
-    {{ year, month, day }, { hour, minute, sec }} = :calendar.local_time
-    new [year: year, month: month, day: day, hour: hour, minute: minute, sec: sec]
+    { megasec, sec, microsec } = :erlang.now
+    {{ year, month, day }, { hour, minute, sec }} = :calendar.now_to_local_time({ megasec, sec, microsec })
+    new [year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: microsec * 1000]
   end
 
   def wday(DateTime[year: year, month: month, day: day]) do
@@ -54,17 +131,183 @@ defrecord DateTime, year: nil, month: nil, day: nil, hour: nil, minute: nil, sec
       end
   end
 
-  def leap_year_y?(year) do
+  def strftime(string, time = DateTime[]) do
+    do_strftime(string, time, []) |> Enum.reverse |> Enum.join
+  end
+
+  defp do_strftime(<< ?%, ?%, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, ["%"|acc])
+  defp do_strftime(<< ?%, ?A, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [@days_of_week_name[wday(time)]|acc])
+  defp do_strftime(<< ?%, ?a, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [@days_of_week_name_short[wday(time)]|acc])
+  defp do_strftime(<< ?%, ?B, rest :: bytes >>, time = DateTime[month: month], acc), do: do_strftime(rest, time, [@month_name[month]|acc])
+  defp do_strftime(<< ?%, ?b, rest :: bytes >>, time = DateTime[month: month], acc), do: do_strftime(rest, time, [@month_name_short[month]|acc])
+  defp do_strftime(<< ?%, ?C, rest :: bytes >>, time = DateTime[year: year], acc), do: do_strftime(rest, time, [div(year, 100)|acc])
+  defp do_strftime(<< ?%, ?c, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_c(time)|acc])
+  defp do_strftime(<< ?%, ?D, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_D(time)|acc])
+  defp do_strftime(<< ?%, ?d, rest :: bytes >>, time = DateTime[day: day], acc), do: do_strftime(rest, time, [two(day)|acc])
+  defp do_strftime(<< ?%, ?e, rest :: bytes >>, time = DateTime[day: day], acc), do: do_strftime(rest, time, [space_two(day)|acc])
+  defp do_strftime(<< ?%, ?F, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_F(time)|acc])
+  defp do_strftime(<< ?%, ?H, rest :: bytes >>, time = DateTime[hour: hour], acc), do: do_strftime(rest, time, [two(hour)|acc])
+  defp do_strftime(<< ?%, ?h, rest :: bytes >>, time = DateTime[month: month], acc), do: do_strftime(rest, time, [@month_name[month]|acc])
+  defp do_strftime(<< ?%, ?I, rest :: bytes >>, time = DateTime[hour: hour], acc), do: do_strftime(rest, time, [two(hour12(hour))|acc])
+  defp do_strftime(<< ?%, ?j, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [three(yday(time))|acc])
+  defp do_strftime(<< ?%, ?k, rest :: bytes >>, time = DateTime[hour: hour], acc), do: do_strftime(rest, time, [space_two(hour)|acc])
+  defp do_strftime(<< ?%, ?L, rest :: bytes >>, time = DateTime[nanosec: nanosec], acc), do: do_strftime(rest, time, [three(div(nanosec, 1000000))|acc])
+  defp do_strftime(<< ?%, ?l, rest :: bytes >>, time = DateTime[hour: hour], acc), do: do_strftime(rest, time, [space_two(hour12(hour))|acc])
+  defp do_strftime(<< ?%, ?M, rest :: bytes >>, time = DateTime[minute: minute], acc), do: do_strftime(rest, time, [two(minute)|acc])
+  defp do_strftime(<< ?%, ?m, rest :: bytes >>, time = DateTime[month: month], acc), do: do_strftime(rest, time, [two(month)|acc])
+  defp do_strftime(<< ?%, ?n, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, ["\n"|acc])
+  defp do_strftime(<< ?%, ?N, rest :: bytes >>, time = DateTime[nanosec: nanosec], acc), do: do_strftime(rest, time, [build_N(nanosec, 9)|acc])
+  defp do_strftime(<< ?%, ?P, rest :: bytes >>, time = DateTime[hour: hour], acc), do: do_strftime(rest, time, [am_pm_s(hour)|acc])
+  defp do_strftime(<< ?%, ?p, rest :: bytes >>, time = DateTime[hour: hour], acc), do: do_strftime(rest, time, [am_pm(hour)|acc])
+  defp do_strftime(<< ?%, ?R, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_R(time)|acc])
+  defp do_strftime(<< ?%, ?r, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_r(time)|acc])
+  defp do_strftime(<< ?%, ?S, rest :: bytes >>, time = DateTime[sec: sec], acc), do: do_strftime(rest, time, [two(sec)|acc])
+  defp do_strftime(<< ?%, ?s, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_s(time)|acc])
+  defp do_strftime(<< ?%, ?T, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_T(time)|acc])
+  defp do_strftime(<< ?%, ?t, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, ["\t"|acc])
+  defp do_strftime(<< ?%, ?U, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_U(time)|acc])
+  defp do_strftime(<< ?%, ?u, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [wday(time)+1|acc])
+  defp do_strftime(<< ?%, ?V, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_V(time)|acc])
+  defp do_strftime(<< ?%, ?v, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_v(time)|acc])
+  defp do_strftime(<< ?%, ?W, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_W(time)|acc])
+  defp do_strftime(<< ?%, ?w, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [wday(time)|acc])
+  defp do_strftime(<< ?%, ?X, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_X(time)|acc])
+  defp do_strftime(<< ?%, ?x, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [build_x(time)|acc])
+  defp do_strftime(<< ?%, ?Y, rest :: bytes >>, time = DateTime[year: year], acc), do: do_strftime(rest, time, [four(year)|acc])
+  defp do_strftime(<< ?%, ?y, rest :: bytes >>, time = DateTime[year: year], acc), do: do_strftime(rest, time, [two(year)|acc])
+  # time zone
+  #defp do_strftime(<< ?%, ?Z, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, ["%"|acc])
+  #defp do_strftime(<< ?%, ?z, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, ["%"|acc])
+  defp do_strftime(<< other :: utf8, rest :: bytes >>, time = DateTime[], acc), do: do_strftime(rest, time, [<< other :: utf8 >>|acc])
+  defp do_strftime(<<>>, DateTime[], acc), do: acc
+
+  defp leap_year_y?(year) do
     rem(year, 4) == 0 && rem(year, 100) != 0 || rem(year, 400) == 0
   end
-end
 
-defmodule DateTime.Utils do
-  def two(int) do
-    string = integer_to_binary(int)
-    case String.length(string) do
-      1 -> "0" <> string
-      _ -> string
+  defp build_c(time = DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec]) do
+    "#{@days_of_week_name_short[wday(time)]} #{@month_name[month]} #{space_two(day)} #{two(hour)}:#{two(minute)}:#{two(sec)} #{four(year)}"
+  end
+
+  defp build_D(DateTime[year: year, month: month, day: day]) do
+    "#{two(month)}/#{two(day)}/#{two(year)}"
+  end
+
+  defp build_F(DateTime[year: year, month: month, day: day]) do
+    "#{four(year)}-#{two(month)}-#{two(day)}"
+  end
+
+  defp build_N(nanosec, digit) when is_integer(digit) do
+    valid_nanosec = nine(nanosec)
+    case digit do
+      i when i == 0 or 1 == 9 -> valid_nanosec
+      i when i > 0 and i < 9 -> take_first(valid_nanosec, digit)
+      i when i > 9 -> add_zero(valid_nanosec, digit - 9)
+    end
+  end
+
+  defp build_R(DateTime[hour: hour, minute: minute]) do
+    "#{two(hour)}:#{two(minute)}"
+  end
+
+  defp build_r(DateTime[hour: hour, minute: minute, sec: sec]) do
+    "#{two(hour12(12))}:#{two(minute)}:#{two(sec)} #{am_pm(hour)}"
+  end
+
+  defp build_s(DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec]) do
+  end
+
+  defp build_T(DateTime[hour: hour, minute: minute, sec: sec]) do
+    "#{two(hour)}:#{two(minute)}:#{two(sec)}"
+  end
+
+  defp build_U(time = DateTime[year: year]) do
+    diff = time.yday - first_sunday_yday(year)
+    if diff >= 0 do
+      two(div(diff, 7) + 1)
+    else
+      "00"
+    end
+  end
+
+  defp first_sunday_yday(year) do
+    ny_day = DateTime.new(year: year)
+    rem(7 - ny_day.wday, 7) + 1
+  end
+
+  defp build_W(time = DateTime[year: year]) do
+    diff = time.yday - first_monday_yday(year)
+    if diff >= 0 do
+      two(div(diff, 7) + 1)
+    else
+      "00"
+    end
+  end
+
+  defp first_monday_yday(year) do
+    ny_day = DateTime.new(year: year)
+    rem(8 - ny_day.wday, 7) + 1
+  end
+
+  defp build_X(DateTime[hour: hour, minute: minute, sec: sec]) do
+    "#{two(hour)}:#{two(minute)}:#{two(sec)}"
+  end
+
+  defp build_x(DateTime[year: year, month: month, day: day]) do
+    "#{two(month)}/#{two(day)}/#{two(year)}"
+  end
+
+  defp build_V(time = DateTime[year: year, month: month, day: day]) do
+    wd = time.wday
+    case { month, day } do
+      { 1, 1 } when wd == 0 or wd == 5 or wd == 6 ->
+        do_build_V(DateTime[year: year - 1, month: 12, day: 31])
+      { 1, 2 } when wd == 0 or wd == 6 ->
+        do_build_V(DateTime[year: year - 1, month: 12, day: 31])
+      { 1, 3 } when wd == 0 ->
+        do_build_V(DateTime[year: year - 1, month: 12, day: 31])
+      { 12, 29 } when wd == 1 ->
+        do_build_V(DateTime[year: year + 1, month: 1, day: 1])
+      { 12, 30 } when wd == 1 or wd == 2 ->
+        do_build_V(DateTime[year: year + 1, month: 1, day: 1])
+      { 12, 31 } when wd == 1 or wd == 2 or wd == 3 ->
+        do_build_V(DateTime[year: year + 1, month: 1, day: 1])
+      _ ->
+        do_build_V(time)
+    end
+  end
+
+  defp do_build_V(time = DateTime[year: year, month: month, day: day]) do
+    diff = time.yday - monday_in_first_thursday_week(year)
+    two(div(diff, 7) + 1)
+  end
+
+  defp monday_in_first_thursday_week(year) do
+    ny_day = DateTime.new(year: year)
+    rem(11 - ny_day.wday, 7) - 2
+  end
+
+  defp build_v(DateTime[year: year, month: month, day: day]) do
+    "#{space_two(day)}-#{@month_name_short[month]}-#{four(year)}"
+  end
+
+  defp hour12(hour) do
+    rem(hour + 11, 12) + 1
+  end
+
+  defp am_pm_s(hour) do
+    if hour < 12 do
+      "am"
+    else
+      "pm"
+    end
+  end
+
+  defp am_pm(hour) do
+    if hour < 12 do
+      "AM"
+    else
+      "PM"
     end
   end
 end
