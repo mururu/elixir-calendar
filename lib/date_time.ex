@@ -114,6 +114,50 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
     new [year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: microsec * 1000]
   end
 
+  def to_erlang(DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec]) do
+    {{ year, month, day }, { hour, minute, sec }}
+  end
+
+  def new_from_erlang({{ year, month, day }, { hour, minute, sec }}) do
+    DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec]
+  end
+
+  def to_secs(time = DateTime[]) do
+    :calendar.datetime_to_gregorian_seconds(time.to_erlang)
+  end
+
+  def secs_after(sec, time = DateTime[nanosec: nanosec]) when is_integer(sec) do
+    (time.to_secs + sec) |> :calendar.gregorian_seconds_to_datetime |> new_from_erlang
+  end
+
+  @doc """
+      t = DateTime.now
+      #=> 2013-04-19 23:44:32
+      t.plus(months: 2, minutes: 4)
+  """
+  def plus(list, time = DateTime[]) do
+    list = Keyword.merge([years: 0, months: 0, days: 0, hours: 0, minutes: 0, secs: 0], list)
+    do_plus([years: list[:years], months: list[:months], days: list[:days], hours: list[:hours], minutes: list[:minutes], secs: list[:secs]], time)
+  end
+
+  def minus(list, time = DateTime[]) do
+    list = Keyword.merge([years: 0, months: 0, days: 0, hours: 0, minutes: 0, secs: 0], list)
+    do_minus([years: list[:years], months: list[:months], days: list[:days], hours: list[:hours], minutes: list[:minutes], secs: list[:secs]], time)
+  end
+
+  defp do_plus([years: years, months: months, days: days, hours: hours, minutes: minutes, secs: secs], time = DateTime[year: year, month: monht, day: day, hour: hour, minute: minute, sec: sec]) when is_integer(years) and is_integer(months) and is_integer(days) and is_integer(hours) and is_integer(minutes) and is_integer(secs) do
+    s = secs + minutes * 60 + hours * 60 * 60 + days * 24 * 60 * 60
+    time = time.secs_after(s)
+    m = time.month + months
+    month = rem(m - 1, 12) + 1
+    year = year + years + div(m - 1, 12)
+    time.update(year: year, month: month)
+  end
+
+  defp do_minus(list = [years: years, months: months, days: days, hours: hours, minutes: minutes, secs: secs], time = DateTime[]) when is_integer(years) and is_integer(months) and is_integer(days) and is_integer(hours) and is_integer(minutes) and is_integer(secs) do
+    Enum.map(list, fn({ k, v })-> { k, -v } end) |> do_plus(time)
+  end
+
   def wday(DateTime[year: year, month: month, day: day]) do
     a = div((14 - month), 12)
     ye = year + 4800 - a
