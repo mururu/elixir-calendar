@@ -321,7 +321,7 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
     end
   end
 
-  defp do_build_V(time = DateTime[year: year, month: month, day: day]) do
+  defp do_build_V(time = DateTime[year: year]) do
     diff = time.yday - monday_in_first_thursday_week(year)
     two(div(diff, 7) + 1)
   end
