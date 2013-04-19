@@ -175,6 +175,22 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
       end
   end
 
+  def equal?(a = DateTime[], b = DateTime[]) do
+    compare(a, b) == 0
+  end
+
+  def is_after?(a = DateTime[], b = DateTime[]) do
+    compare(a, b) < 0
+  end
+
+  def is_before?(a = DateTime[], b = DateTime[]) do
+    compare(a, b) > 0
+  end
+
+  defp compare(a = DateTime[], b = DateTime[]) do
+    (a.to_secs * 1000000000 + a.nanosec) - (b.to_secs * 1000000000 + b.nanosec)
+  end
+
   def strftime(string, time = DateTime[]) do
     do_strftime(string, time, []) |> Enum.reverse |> Enum.join
   end
