@@ -16,6 +16,11 @@ defmodule DateTimeTest do
   end
 
   test :valid? do
+    t = DateTime.new(year: 2001, month: 2, day: 28, hour: 0, minute: 0, sec: 0, nanosec: 0, offset: { 0, 0 })
+    assert t.valid?
+
+    t = DateTime.new(year: 2001, month: 2, day: 29, hour: 0, minute: 0, sec: 0, nanosec: 0, offset: { 0, 0 })
+    refute t.valid?
   end
 
   test :plus do
