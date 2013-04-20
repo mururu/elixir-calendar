@@ -55,7 +55,7 @@ defmodule DateTime.Utils do
       7 -> "00" <> string
       8 -> "0" <> string
       9 -> string
-      _ -> take_last(string, 4)
+      _ -> take_last(string, 9)
     end
   end
 
@@ -127,7 +127,7 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   end
 
   def secs_after(sec, time = DateTime[nanosec: nanosec]) when is_integer(sec) do
-    (time.to_secs + sec) |> :calendar.gregorian_seconds_to_datetime |> new_from_erlang
+    (time.to_secs + sec) |> :calendar.gregorian_seconds_to_datetime |> new_from_erlang |> update_nanosec(nanosec)
   end
 
   @doc """
@@ -176,18 +176,18 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   end
 
   def equal?(a = DateTime[], b = DateTime[]) do
-    compare(a, b) == 0
+    diff(a, b) == 0
   end
 
   def is_after?(a = DateTime[], b = DateTime[]) do
-    compare(a, b) < 0
+    diff(a, b) < 0
   end
 
   def is_before?(a = DateTime[], b = DateTime[]) do
-    compare(a, b) > 0
+    diff(a, b) > 0
   end
 
-  defp compare(a = DateTime[], b = DateTime[]) do
+  defp diff(a = DateTime[], b = DateTime[]) do
     (a.to_secs * 1000000000 + a.nanosec) - (b.to_secs * 1000000000 + b.nanosec)
   end
 
@@ -356,19 +356,11 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   end
 
   defp am_pm_s(hour) do
-    if hour < 12 do
-      "am"
-    else
-      "pm"
-    end
+    if hour < 12, do: "am", else: "pm"
   end
 
   defp am_pm(hour) do
-    if hour < 12 do
-      "AM"
-    else
-      "PM"
-    end
+    if hour < 12, do: "AM", else: "PM"
   end
 end
 
