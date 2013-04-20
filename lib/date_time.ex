@@ -299,7 +299,8 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
     "#{two(hour12(12))}:#{two(minute)}:#{two(sec)} #{am_pm(hour)}"
   end
 
-  defp build_s(DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec]) do
+  defp build_s(time = DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec]) do
+    time.new_offset({ 0, 8 }).to_secs - :calendar.datetime_to_gregorian_seconds({{ 1970, 1, 1 }, { 0, 0, 0 }})
   end
 
   defp build_T(DateTime[hour: hour, minute: minute, sec: sec]) do
