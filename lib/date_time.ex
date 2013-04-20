@@ -72,7 +72,7 @@ defmodule DateTime.Utils do
   end
 end
 
-defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, nanosec: 0, offset: { 0, 24 } do
+defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, nanosec: 0, offset: { 0, 0 } do
   import DateTime.Utils
 
   @days_of_week_name [{ 0, "Sunday" }, { 1, "Monday" }, { 2, "Tuesday" }, { 3, "Wednesday" }, { 4, "Thursday" }, { 5, "Friday" }, { 6, "saturday" }]
@@ -138,8 +138,8 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
     :calendar.valid_date(year, month, day)
   end
 
-  defp valid_offset?({ h, t }) do
-    t != 0
+  defp valid_offset?({ hour, min }) do
+    valid_minute?(min)
   end
 
   def to_erlang(DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec]) do
@@ -304,7 +304,7 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   end
 
   defp build_s(time = DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec]) do
-    time.new_offset({ 0, 8 }).to_secs - :calendar.datetime_to_gregorian_seconds({{ 1970, 1, 1 }, { 0, 0, 0 }})
+    time.new_offset({ 0, 0 }).to_secs - :calendar.datetime_to_gregorian_seconds({{ 1970, 1, 1 }, { 0, 0, 0 }})
   end
 
   defp build_T(DateTime[hour: hour, minute: minute, sec: sec]) do
@@ -394,12 +394,14 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   end
 
   def new_offset(new_o, time = DateTime[offset: offset]) do
-    time = time.plus(minutes: offset_to_min(new_o) - offset_to_min(offset))
+    min = offset_to_min(new_o) - offset_to_min(offset)
+    time = time.plus(minutes: min)
     time = time.update(offset: new_o)
   end
 
-  defp offset_to_min({ h, t }) do
-    offset_min = round(60 * 24 * h / t)
+  defp offset_to_min({ hour, min }) do
+    m = abs(hour) * 60 + min * 60
+    if hour >= 0, do: m, else: -m
   end
 end
 
@@ -414,11 +416,8 @@ defimpl Binary.Inspect, for: DateTime do
     offset_inspect(offset)
   end
 
-  defp offset_inspect({ h, t }) do
-    offset_min = round(60 * 24 * h / t)
-    hour = div(offset_min, 60)
-    min = rem(offset_min, 60)
-    sign = if hour < 0 || min < 0, do: "-", else: "+"
+  defp offset_inspect({ hour, min }) do
+    sign = if hour < 0 , do: "-", else: "+"
     sign <> two(abs(hour)) <> ":" <> two(abs(min))
   end
 end
