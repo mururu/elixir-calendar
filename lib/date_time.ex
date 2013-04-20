@@ -151,7 +151,8 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   end
 
   def secs_after(sec, time = DateTime[nanosec: nanosec]) when is_integer(sec) do
-    (time.to_secs + sec) |> :calendar.gregorian_seconds_to_datetime |> new_from_erlang |> update_nanosec(nanosec)
+    time = (time.to_secs + sec) |> :calendar.gregorian_seconds_to_datetime |> new_from_erlang
+    time.update(nanosec: nanosec)
   end
 
   @doc """
