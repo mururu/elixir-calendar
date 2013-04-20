@@ -406,13 +406,13 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   end
 
   def new_offset(new_o, time = DateTime[offset: offset]) do
-    min = offset_to_min(new_o) - offset_to_min(offset)
+    min = round(offset_to_min(new_o) - offset_to_min(offset))
     time = time.plus(minutes: min)
     time.update(offset: new_o)
   end
 
   defp offset_to_min({ hour, min }) do
-    m = abs(hour) * 60 + min * 60
+    m = abs(hour) * 60 + min
     if hour >= 0, do: m, else: -m
   end
 end
