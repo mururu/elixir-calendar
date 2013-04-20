@@ -387,6 +387,15 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   defp am_pm(hour) do
     if hour < 12, do: "AM", else: "PM"
   end
+
+  def new_offset(new_o, time = DateTime[offset: offset]) do
+    time = time.plus(minutes: offset_to_min(new_o) - offset_to_min(offset))
+    time = time.update(offset: new_o)
+  end
+
+  defp offset_to_min({ h, t }) do
+    offset_min = round(60 * 24 * h / t)
+  end
 end
 
 defimpl Binary.Inspect, for: DateTime do
