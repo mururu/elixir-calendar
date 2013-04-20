@@ -186,12 +186,12 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
     do_minus([years: list[:years], months: list[:months], days: list[:days], hours: list[:hours], minutes: list[:minutes], secs: list[:secs]], time)
   end
 
-  defp do_plus([years: years, months: months, days: days, hours: hours, minutes: minutes, secs: secs], time = DateTime[year: year]) when is_integer(years) and is_integer(months) and is_integer(days) and is_integer(hours) and is_integer(minutes) and is_integer(secs) do
+  defp do_plus([years: years, months: months, days: days, hours: hours, minutes: minutes, secs: secs], time = DateTime[]) when is_integer(years) and is_integer(months) and is_integer(days) and is_integer(hours) and is_integer(minutes) and is_integer(secs) do
     s = secs + minutes * 60 + hours * 60 * 60 + days * 24 * 60 * 60
     time = time.secs_after(s)
     m = time.month + months
     month = rem(m - 1, 12) + 1
-    year = year + years + div(m - 1, 12)
+    year = time.year + years + div(m - 1, 12)
     time.update(year: year, month: month)
   end
 
@@ -229,7 +229,7 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   end
 
   defp diff(a = DateTime[], b = DateTime[]) do
-    (a.to_secs * 1000000000 + a.nanosec) - (b.to_secs * 1000000000 + b.nanosec)
+    (a.new_offset({ 0, 0 }).to_secs * 1000000000 + a.nanosec) - (b.new_offset({ 0, 0 }).to_secs * 1000000000 + b.nanosec)
   end
 
   def strftime(string, time = DateTime[]) do
