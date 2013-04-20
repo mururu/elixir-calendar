@@ -72,7 +72,7 @@ defmodule DateTime.Utils do
   end
 end
 
-defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, nanosec: 0 do
+defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, nanosec: 0, offset: { 0, 24 } do
   import DateTime.Utils
 
   @days_of_week_name [{ 0, "Sunday" }, { 1, "Monday" }, { 2, "Tuesday" }, { 3, "Wednesday" }, { 4, "Thursday" }, { 5, "Friday" }, { 6, "saturday" }]
