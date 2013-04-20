@@ -114,8 +114,8 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
     new [year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: microsec * 1000]
   end
 
-  def valid?(DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: nanosec]) do
-    valid_hour?(hour) && valid_minute?(minute) && valid_sec?(sec) && valid_nanosec?(nanosec) && valid_date?(year, month, day)
+  def valid?(DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: nanosec, offset: offset]) do
+    valid_hour?(hour) && valid_minute?(minute) && valid_sec?(sec) && valid_nanosec?(nanosec) && valid_offset?(offset) && valid_date?(year, month, day)
   end
 
   defp valid_hour?(hour) do
@@ -136,6 +136,10 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
 
   defp valid_date?(year, month, day) do
     :calendar.valid_date(year, month, day)
+  end
+
+  defp valid_offset?({ h, t }) do
+    t != 0
   end
 
   def to_erlang(DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec]) do
