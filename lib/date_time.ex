@@ -110,8 +110,20 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
 
   def now do
     { megasec, sec, microsec } = :erlang.now
-    {{ year, month, day }, { hour, minute, sec }} = :calendar.now_to_local_time({ megasec, sec, microsec })
-    new [year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: microsec * 1000]
+    l = :calendar.now_to_local_time({ megasec, sec, microsec })
+    u = :calendar.now_to_universal_time({ megasec, sec, microsec })
+    offset = calc_offset(l, u)
+    {{ year, month, day }, { hour, minute, sec }} = l
+    new [year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: microsec * 1000, offset: offset]
+  end
+
+  defp calc_offset(local, universal) do
+    ls = local |> new_from_erlang |> to_secs
+    us = universal |> new_from_erlang |> to_secs
+    min = div(ls , 60) - div(us, 60)
+    h = div(abs(min), 60)
+    m = rem(abs(min), 60)
+    if min >= 0, do: { h, m }, else: { -h, m }
   end
 
   def valid?(DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: nanosec, offset: offset]) do
