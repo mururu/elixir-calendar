@@ -393,9 +393,18 @@ defimpl Binary.Inspect, for: DateTime do
   import Kernel, except: [inspect: 2]
   import DateTime.Utils
 
-  def inspect(DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec], _) do
+  def inspect(DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, offset: offset], _) do
     [year, two(month), two(day)] |> Enum.join("-") <>
     " " <>
-    [two(hour), two(minute), two(sec)] |> Enum.join(":")
+    [two(hour), two(minute), two(sec)] |> Enum.join(":") <>
+    offset_inspect(offset)
+  end
+
+  defp offset_inspect({ h, t }) do
+    offset_min = round(60 * 24 * h / t)
+    hour = div(offset_min, 60)
+    min = rem(offset_min, 60)
+    sign = if hour < 0 || min < 0, do: "-", else: "+"
+    sign <> two(abs(hour)) <> ":" <> two(abs(min))
   end
 end
