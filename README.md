@@ -1,5 +1,7 @@
 # DateTime for Elixir
 
+[![Build Status](https://travis-ci.org/mururu/exdatetime.png?branch=master)](https://travis-ci.org/mururu/exdatetime)
+
 A date and time library for Elixir.
 For now this is under development.
 
