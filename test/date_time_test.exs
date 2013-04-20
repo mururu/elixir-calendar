@@ -91,4 +91,9 @@ defmodule DateTimeTest do
     refute t1.is_before? t2
     assert t2.is_before? t1
   end
+
+  test :now do
+    t = DateTime.now
+    assert t.valid?
+  end
 end
