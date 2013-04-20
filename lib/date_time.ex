@@ -150,7 +150,7 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
     :calendar.valid_date(year, month, day)
   end
 
-  defp valid_offset?({ hour, min }) do
+  defp valid_offset?({ _, min }) do
     valid_minute?(min)
   end
 
@@ -186,7 +186,7 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
     do_minus([years: list[:years], months: list[:months], days: list[:days], hours: list[:hours], minutes: list[:minutes], secs: list[:secs]], time)
   end
 
-  defp do_plus([years: years, months: months, days: days, hours: hours, minutes: minutes, secs: secs], time = DateTime[year: year, month: monht, day: day, hour: hour, minute: minute, sec: sec]) when is_integer(years) and is_integer(months) and is_integer(days) and is_integer(hours) and is_integer(minutes) and is_integer(secs) do
+  defp do_plus([years: years, months: months, days: days, hours: hours, minutes: minutes, secs: secs], time = DateTime[year: year]) when is_integer(years) and is_integer(months) and is_integer(days) and is_integer(hours) and is_integer(minutes) and is_integer(secs) do
     s = secs + minutes * 60 + hours * 60 * 60 + days * 24 * 60 * 60
     time = time.secs_after(s)
     m = time.month + months
@@ -315,7 +315,7 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
     "#{two(hour12(12))}:#{two(minute)}:#{two(sec)} #{am_pm(hour)}"
   end
 
-  defp build_s(time = DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec]) do
+  defp build_s(time = DateTime[]) do
     time.new_offset({ 0, 0 }).to_secs - :calendar.datetime_to_gregorian_seconds({{ 1970, 1, 1 }, { 0, 0, 0 }})
   end
 
@@ -408,7 +408,7 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   def new_offset(new_o, time = DateTime[offset: offset]) do
     min = offset_to_min(new_o) - offset_to_min(offset)
     time = time.plus(minutes: min)
-    time = time.update(offset: new_o)
+    time.update(offset: new_o)
   end
 
   defp offset_to_min({ hour, min }) do
