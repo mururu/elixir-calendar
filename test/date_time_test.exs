@@ -92,8 +92,8 @@ defmodule DateTimeTest do
     assert t2.is_before? t1
   end
 
-  test :now do
-    t = DateTime.now
+  test :local_time do
+    t = DateTime.local_time
     assert t.valid?
   end
 end
