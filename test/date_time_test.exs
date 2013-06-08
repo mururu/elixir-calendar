@@ -92,6 +92,11 @@ defmodule DateTimeTest do
     assert t2.is_before? t1
   end
 
+  test :universal_time do
+    t =  DateTime.universal_time
+    assert t.valid?
+  end
+
   test :local_time do
     t = DateTime.local_time
     assert t.valid?

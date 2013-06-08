@@ -108,6 +108,12 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
     { 12, 0 + 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 }
   ]
 
+  def universal_time do
+    { megasec, sec, microsec } = :erlang.now
+    {{ year, month, day }, { hour, minute, sec }} = :calendar.now_to_universal_time({ megasec, sec, microsec })
+    new [year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: microsec * 1000, offset: { 0, 0 }]
+  end
+
   def local_time do
     { megasec, sec, microsec } = :erlang.now
     l = :calendar.now_to_local_time({ megasec, sec, microsec })
