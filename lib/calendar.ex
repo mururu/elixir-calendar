@@ -1,4 +1,4 @@
-defmodule DateTime.Utils do
+defmodule Calendar.Utils do
   def space_two(int) do
     string = integer_to_binary(int)
     case String.length(string) do
@@ -72,8 +72,10 @@ defmodule DateTime.Utils do
   end
 end
 
-defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, nanosec: 0, offset: { 0, 0 } do
-  import DateTime.Utils
+defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, nanosec: 0, offset: { 0, 0 }
+
+defmodule Calendar do
+  import Calendar.Utils
 
   @days_of_week_name [{ 0, "Sunday" }, { 1, "Monday" }, { 2, "Tuesday" }, { 3, "Wednesday" }, { 4, "Thursday" }, { 5, "Friday" }, { 6, "saturday" }]
   @days_of_week_name_short [{ 0, "Sun" }, { 1, "Mon" }, { 2, "Tue" }, { 3, "Wed" }, { 4, "Thu" }, { 5, "Fri" }, { 6, "sat" }]
@@ -111,7 +113,7 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   def universal_time do
     { megasec, sec, microsec } = :erlang.now
     {{ year, month, day }, { hour, minute, sec }} = :calendar.now_to_universal_time({ megasec, sec, microsec })
-    new [year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: microsec * 1000, offset: { 0, 0 }]
+    DateTime.new [year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: microsec * 1000, offset: { 0, 0 }]
   end
 
   def local_time do
@@ -120,7 +122,7 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
     u = :calendar.now_to_universal_time({ megasec, sec, microsec })
     offset = calc_offset(l, u)
     {{ year, month, day }, { hour, minute, sec }} = l
-    new [year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: microsec * 1000, offset: offset]
+    DateTime.new [year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, nanosec: microsec * 1000, offset: offset]
   end
 
   defp calc_offset(local, universal) do
@@ -169,11 +171,11 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   end
 
   def to_secs(time = DateTime[]) do
-    :calendar.datetime_to_gregorian_seconds(time.to_erlang)
+    :calendar.datetime_to_gregorian_seconds(to_erlang(time))
   end
 
-  def secs_after(sec, time = DateTime[nanosec: nanosec, offset: offset]) when is_integer(sec) do
-    time = (time.to_secs + sec) |> :calendar.gregorian_seconds_to_datetime |> new_from_erlang
+  def secs_after(time = DateTime[nanosec: nanosec, offset: offset], sec) when is_integer(sec) do
+    time = (to_secs(time) + sec) |> :calendar.gregorian_seconds_to_datetime |> new_from_erlang
     time.update(nanosec: nanosec, offset: offset)
   end
 
@@ -182,19 +184,19 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
       #=> 2013-04-19 23:44:32
       t.plus(months: 2, minutes: 4)
   """
-  def plus(list, time = DateTime[]) do
+  def plus(time = DateTime[], list) do
     list = Keyword.merge([years: 0, months: 0, days: 0, hours: 0, minutes: 0, secs: 0], list)
     do_plus([years: list[:years], months: list[:months], days: list[:days], hours: list[:hours], minutes: list[:minutes], secs: list[:secs]], time)
   end
 
-  def minus(list, time = DateTime[]) do
+  def minus(time = DateTime[], list) do
     list = Keyword.merge([years: 0, months: 0, days: 0, hours: 0, minutes: 0, secs: 0], list)
     do_minus([years: list[:years], months: list[:months], days: list[:days], hours: list[:hours], minutes: list[:minutes], secs: list[:secs]], time)
   end
 
   defp do_plus([years: years, months: months, days: days, hours: hours, minutes: minutes, secs: secs], time = DateTime[]) when is_integer(years) and is_integer(months) and is_integer(days) and is_integer(hours) and is_integer(minutes) and is_integer(secs) do
     s = secs + minutes * 60 + hours * 60 * 60 + days * 24 * 60 * 60
-    time = time.secs_after(s)
+    time = secs_after(time, s)
     m = time.month + months
     month = rem(m - 1, 12) + 1
     year = time.year + years + div(m - 1, 12)
@@ -227,18 +229,18 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
   end
 
   def is_after?(a = DateTime[], b = DateTime[]) do
-    diff(a, b) < 0
-  end
-
-  def is_before?(a = DateTime[], b = DateTime[]) do
     diff(a, b) > 0
   end
 
-  defp diff(a = DateTime[], b = DateTime[]) do
-    (a.new_offset({ 0, 0 }).to_secs * 1000000000 + a.nanosec) - (b.new_offset({ 0, 0 }).to_secs * 1000000000 + b.nanosec)
+  def is_before?(a = DateTime[], b = DateTime[]) do
+    diff(a, b) < 0
   end
 
-  def format(string, time = DateTime[]) do
+  defp diff(a = DateTime[], b = DateTime[]) do
+    ((new_offset(a, { 0, 0 }) |> to_secs) * 1000000000 + a.nanosec) - ((new_offset(b, { 0, 0 }) |> to_secs) * 1000000000 + b.nanosec)
+  end
+
+  def format(time = DateTime[], string) do
     do_format(string, time, []) |> Enum.reverse |> Enum.join
   end
 
@@ -411,9 +413,9 @@ defrecord DateTime, year: 1970, month: 1, day: 1, hour: 0, minute: 0, sec: 0, na
     if hour < 12, do: "AM", else: "PM"
   end
 
-  def new_offset(new_o, time = DateTime[offset: offset]) do
+  def new_offset(time = DateTime[offset: offset], new_o) do
     min = round(offset_to_min(new_o) - offset_to_min(offset))
-    time = time.plus(minutes: min)
+    time = plus(time, minutes: min)
     time.update(offset: new_o)
   end
 
@@ -425,7 +427,7 @@ end
 
 defimpl Binary.Inspect, for: DateTime do
   import Kernel, except: [inspect: 2]
-  import DateTime.Utils
+  import Calendar.Utils
 
   def inspect(DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, offset: offset], _) do
     ([year, two(month), two(day)] |> Enum.join("-")) <>

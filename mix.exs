@@ -1,8 +1,8 @@
-defmodule DateTime.Mixfile do
+defmodule Calendar.Mixfile do
   use Mix.Project
 
   def project do
-    [ app: :exdatetime,
+    [ app: :calendar,
       version: "0.0.1"]
   end
 end
