@@ -422,9 +422,9 @@ defimpl Binary.Inspect, for: DateTime do
   import DateTime.Utils
 
   def inspect(DateTime[year: year, month: month, day: day, hour: hour, minute: minute, sec: sec, offset: offset], _) do
-    [year, two(month), two(day)] |> Enum.join("-") <>
+    ([year, two(month), two(day)] |> Enum.join("-")) <>
     " " <>
-    [two(hour), two(minute), two(sec)] |> Enum.join(":") <>
+    ([two(hour), two(minute), two(sec)] |> Enum.join(":")) <>
     offset_inspect(offset)
   end
 
