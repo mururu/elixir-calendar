@@ -71,7 +71,7 @@ defmodule Calendar do
   DateTime -> unix_time
   """
   def to_unix_time(time = DateTime[]) do
-    (time |> new_offset({ 0, 0 }) |> to_seconds) -
+    (time |> change_offset({ 0, 0 }) |> to_seconds) -
       C.datetime_to_gregorian_seconds({{ 1970, 1, 1 }, { 0, 0, 0 }})
   end
 
@@ -123,6 +123,15 @@ defmodule Calendar do
   """
   def is_before?(a = DateTime[], b = DateTime[]) do
     diff(a, b) < 0
+  end
+
+  @doc """
+  Change offset.
+  """
+  def change_offset(time = DateTime[offset: offset], new_o) do
+    min = round(offset_to_min(new_o) - offset_to_min(offset))
+    time = plus(time, minutes: min)
+    time.update(offset: new_o)
   end
 
   @doc """
@@ -211,8 +220,8 @@ defmodule Calendar do
   end
 
   defp diff(a = DateTime[], b = DateTime[]) do
-    ((new_offset(a, { 0, 0 }) |> to_seconds) * 1000000000 + a.nanosecond) -
-      ((new_offset(b, { 0, 0 }) |> to_seconds) * 1000000000 + b.nanosecond)
+    ((change_offset(a, { 0, 0 }) |> to_seconds) * 1000000000 + a.nanosecond) -
+      ((change_offset(b, { 0, 0 }) |> to_seconds) * 1000000000 + b.nanosecond)
   end
 
   defp do_format(DateTime[year: year] = t, "YYYY" <> rest) do
@@ -362,12 +371,6 @@ defmodule Calendar do
 
   defp just_three_digit(n) do
     integer_to_binary(n)
-  end
-
-  def new_offset(time = DateTime[offset: offset], new_o) do
-    min = round(offset_to_min(new_o) - offset_to_min(offset))
-    time = plus(time, minutes: min)
-    time.update(offset: new_o)
   end
 
   defp offset_to_min({ hour, min }) do

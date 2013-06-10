@@ -77,9 +77,9 @@ defmodule CalendarTest do
     assert t.offset == { 1, 1 }
   end
 
-  test :new_offset do
+  test :change_offset do
     t = DateTime.new(year: 2000, month: 1, day: 1, hour: 0, minute: 0, second: 0, nanosecond: 0, offset: { 0, 0 })
-    t = Calendar.new_offset(t, { -3, 30 })
+    t = Calendar.change_offset(t, { -3, 30 })
     assert t.year == 1999
     assert t.month == 12
     assert t.day == 31
