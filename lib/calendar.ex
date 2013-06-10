@@ -3,8 +3,6 @@ defrecord DateTime, year: 1970, month: 1, day: 1,
                     nanosecond: 0, offset: { 0, 0 }
 
 defmodule Calendar do
-  import Calendar.Utils
-
   alias :calendar, as: C
 
   @doc """
@@ -131,7 +129,7 @@ defmodule Calendar do
   Returns string.
   """
   def format(time = DateTime[], string) do
-    do_format(string, time, []) |> :lists.reverse |> Enum.join
+    do_format(time, string)
   end
 
   ## private
@@ -217,292 +215,153 @@ defmodule Calendar do
       ((new_offset(b, { 0, 0 }) |> to_seconds) * 1000000000 + b.nanosecond)
   end
 
-  defp do_format(<< ?%, ?%, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, ["%"|acc])
+  defp do_format(DateTime[year: year] = t, "YYYY" <> rest) do
+    integer_to_binary(year) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?A, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [weekday_name(day_of_week(time))|acc])
+  defp do_format(DateTime[year: year] = t, "YY" <> rest) do
+    just_two_digit(rem(year, 100)) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?a, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [weekday_name_s(day_of_week(time))|acc])
+  defp do_format(DateTime[month: month] = t, "MMMM" <> rest) do
+    month_name(month) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?B, rest :: bytes >>, time = DateTime[month: month], acc) do
-    do_format(rest, time, [month_name(month)|acc])
+  defp do_format(DateTime[month: month] = t, "MMM" <> rest) do
+    month_name_s(month) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?b, rest :: bytes >>, time = DateTime[month: month], acc) do
-    do_format(rest, time, [month_name_s(month)|acc])
+  defp do_format(DateTime[month: month] = t, "MM" <> rest) do
+    just_two_digit(month) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?C, rest :: bytes >>, time = DateTime[year: year], acc) do
-    do_format(rest, time, [div(year, 100)|acc])
+  defp do_format(DateTime[month: month] = t, "M" <> rest) do
+    integer_to_binary(month) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?c, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_c(time)|acc])
+  defp do_format(DateTime[day: day] = t, "dd" <> rest) do
+    just_two_digit(day) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?D, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_D(time)|acc])
+  defp do_format(DateTime[day: day] = t, "d" <> rest) do
+    integer_to_binary(day) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?d, rest :: bytes >>, time = DateTime[day: day], acc) do
-    do_format(rest, time, [two(day)|acc])
+  defp do_format(DateTime[] = t, "EEEE" <> rest) do
+    weekday_name(day_of_week(t)) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?e, rest :: bytes >>, time = DateTime[day: day], acc) do
-    do_format(rest, time, [space_two(day)|acc])
+  defp do_format(DateTime[] = t, "EE" <> rest) do
+    weekday_name_s(day_of_week(t)) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?F, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_F(time)|acc])
+  defp do_format(DateTime[hour: hour] = t, "hh" <> rest) do
+    hour = rem(hour, 12)
+    just_two_digit(hour) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?H, rest :: bytes >>, time = DateTime[hour: hour], acc) do
-    do_format(rest, time, [two(hour)|acc])
+  defp do_format(DateTime[hour: hour] = t, "h" <> rest) do
+    hour = rem(hour, 12)
+    integer_to_binary(hour) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?h, rest :: bytes >>, time = DateTime[month: month], acc) do
-    do_format(rest, time, [month_name(month)|acc])
+  defp do_format(DateTime[hour: hour] = t, "HH" <> rest) do
+    just_two_digit(hour) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?I, rest :: bytes >>, time = DateTime[hour: hour], acc) do
-    do_format(rest, time, [two(hour12(hour))|acc])
+  defp do_format(DateTime[hour: hour] = t, "H" <> rest) do
+    integer_to_binary(hour) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?j, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [three(day_of_year(time))|acc])
+  defp do_format(DateTime[hour: hour] = t, "a" <> rest) do
+    label = if hour < 12, do: "AM", else: "PM"
+    label <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?k, rest :: bytes >>, time = DateTime[hour: hour], acc) do
-    do_format(rest, time, [space_two(hour)|acc])
+  defp do_format(DateTime[minute: minute] = t, "mm" <> rest) do
+    just_two_digit(minute) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?L, rest :: bytes >>, time = DateTime[nanosecond: nanosecond], acc) do
-    do_format(rest, time, [three(div(nanosecond, 1000000))|acc])
+  defp do_format(DateTime[minute: minute] = t, "m" <> rest) do
+    integer_to_binary(minute) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?l, rest :: bytes >>, time = DateTime[hour: hour], acc) do
-    do_format(rest, time, [space_two(hour12(hour))|acc])
+  defp do_format(DateTime[second: second] = t, "ss" <> rest) do
+    just_two_digit(second) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?M, rest :: bytes >>, time = DateTime[minute: minute], acc) do
-    do_format(rest, time, [two(minute)|acc])
+  defp do_format(DateTime[second: second] = t, "s" <> rest) do
+    integer_to_binary(second) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?m, rest :: bytes >>, time = DateTime[month: month], acc) do
-    do_format(rest, time, [two(month)|acc])
+  defp do_format(DateTime[nanosecond: nanosecond] = t, "SSS" <> rest) do
+    just_three_digit(div(nanosecond, 1000)) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?n, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, ["\n"|acc])
+  defp do_format(DateTime[nanosecond: nanosecond] = t, "SS" <> rest) do
+    just_two_digit(div(nanosecond, 10000)) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?N, rest :: bytes >>, time = DateTime[nanosecond: nanosecond], acc) do
-    do_format(rest, time, [build_N(nanosecond, 9)|acc])
+  defp do_format(DateTime[nanosecond: nanosecond] = t, "S" <> rest) do
+    integer_to_binary(div(nanosecond, 100000)) <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?P, rest :: bytes >>, time = DateTime[hour: hour], acc) do
-    do_format(rest, time, [am_pm_s(hour)|acc])
+  defp do_format(DateTime[offset: { hour, minute }] = t, "ZZ" <> rest) do
+    sign = if hour >= 0, do: "+", else: "-"
+    "#{sign}#{just_two_digit(abs(hour))}:#{just_two_digit(minute)}" <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?p, rest :: bytes >>, time = DateTime[hour: hour], acc) do
-    do_format(rest, time, [am_pm(hour)|acc])
+  defp do_format(DateTime[offset: { hour, minute }] = t, "Z" <> rest) do
+    sign = if hour >= 0, do: "+", else: "-"
+    "#{sign}#{just_two_digit(abs(hour))}#{just_two_digit(minute)}" <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?R, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_R(time)|acc])
+  defp do_format(DateTime[] = t, "''" <> rest) do
+    "'" <> do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?r, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_r(time)|acc])
+  defp do_format(DateTime[] = t, "'" <> rest) do
+    do_format_escape(t, rest)
   end
 
-  defp do_format(<< ?%, ?S, rest :: bytes >>, time = DateTime[second: second], acc) do
-    do_format(rest, time, [two(second)|acc])
+  defp do_format(DateTime[] = t, << h, rest :: binary >>) when not (h in ?a..?z or h in ?A..?Z) do
+    << h, do_format(t, rest) :: binary >>
   end
 
-  defp do_format(<< ?%, ?s, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_s(time)|acc])
+  defp do_format(DateTime[], <<>>) do
+    <<>>
   end
 
-  defp do_format(<< ?%, ?T, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_T(time)|acc])
+  defp do_format_escape(DateTime[] = t, "'" <> rest) do
+    do_format(t, rest)
   end
 
-  defp do_format(<< ?%, ?t, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, ["\t"|acc])
+  defp do_format_escape(DateTime[] = t, << h, rest :: binary >>) do
+    << h, do_format_escape(t, rest) :: binary >>
   end
 
-  defp do_format(<< ?%, ?U, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_U(time)|acc])
+  defp do_format_escape(DateTime[], <<>>) do
+    <<>>
   end
 
-  defp do_format(<< ?%, ?u, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [day_of_week(time)+1|acc])
+  defp just_two_digit(n) when n < 10 do
+    "0" <> integer_to_binary(n)
   end
 
-  defp do_format(<< ?%, ?V, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_V(time)|acc])
+  defp just_two_digit(n) do
+    integer_to_binary(n)
   end
 
-  defp do_format(<< ?%, ?v, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_v(time)|acc])
+  defp just_three_digit(n) when n < 10 do
+    "00" <> integer_to_binary(n)
   end
 
-  defp do_format(<< ?%, ?W, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_W(time)|acc])
+  defp just_three_digit(n) when n < 100 do
+    "0" <> integer_to_binary(n)
   end
 
-  defp do_format(<< ?%, ?w, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [day_of_week(time)|acc])
-  end
-
-  defp do_format(<< ?%, ?X, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_X(time)|acc])
-  end
-
-  defp do_format(<< ?%, ?x, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [build_x(time)|acc])
-  end
-
-  defp do_format(<< ?%, ?Y, rest :: bytes >>, time = DateTime[year: year], acc) do
-    do_format(rest, time, [four(year)|acc])
-  end
-
-  defp do_format(<< ?%, ?y, rest :: bytes >>, time = DateTime[year: year], acc) do
-    do_format(rest, time, [two(year)|acc])
-  end
-
-  defp do_format(<< other :: utf8, rest :: bytes >>, time = DateTime[], acc) do
-    do_format(rest, time, [<< other :: utf8 >>|acc])
-  end
-
-  defp do_format(<<>>, DateTime[], acc) do
-    acc
-  end
-
-  defp build_c(time = DateTime[year: year, month: month, day: day, hour: hour, minute: minute, second: second]) do
-    "#{weekday_name_s(day_of_week(time))} #{month_name(month)} #{space_two(day)} " <>
-    "#{two(hour)}:#{two(minute)}:#{two(second)} #{four(year)}"
-  end
-
-  defp build_D(DateTime[year: year, month: month, day: day]) do
-    "#{two(month)}/#{two(day)}/#{two(year)}"
-  end
-
-  defp build_F(DateTime[year: year, month: month, day: day]) do
-    "#{four(year)}-#{two(month)}-#{two(day)}"
-  end
-
-  defp build_N(nanosecond, digit) when is_integer(digit) do
-    valid_nanosecond = nine(nanosecond)
-    case digit do
-      i when i == 0 or 1 == 9 -> valid_nanosecond
-      i when i > 0 and i < 9 -> take_first(valid_nanosecond, digit)
-      i when i > 9 -> add_zero(valid_nanosecond, digit - 9)
-    end
-  end
-
-  defp build_R(DateTime[hour: hour, minute: minute]) do
-    "#{two(hour)}:#{two(minute)}"
-  end
-
-  defp build_r(DateTime[hour: hour, minute: minute, second: second]) do
-    "#{two(hour12(12))}:#{two(minute)}:#{two(second)} #{am_pm(hour)}"
-  end
-
-  defp build_s(time = DateTime[]) do
-    (time |> new_offset({ 0, 0 }) |> to_seconds) - C.datetime_to_gregorian_seconds({{ 1970, 1, 1 }, { 0, 0, 0 }})
-  end
-
-  defp build_T(DateTime[hour: hour, minute: minute, second: second]) do
-    "#{two(hour)}:#{two(minute)}:#{two(second)}"
-  end
-
-  defp build_U(time = DateTime[year: year]) do
-    diff = (time |> day_of_year) - first_sunday_yday(year)
-    if diff >= 0 do
-      two(div(diff, 7) + 1)
-    else
-      "00"
-    end
-  end
-
-  defp first_sunday_yday(year) do
-    ny_day = DateTime.new(year: year)
-    rem(7 - day_of_week(ny_day), 7) + 1
-  end
-
-  defp build_W(time = DateTime[year: year]) do
-    diff = (time |> day_of_year) - first_monday_yday(year)
-    if diff >= 0 do
-      two(div(diff, 7) + 1)
-    else
-      "00"
-    end
-  end
-
-  defp first_monday_yday(year) do
-    ny_day = DateTime.new(year: year)
-    rem(8 - day_of_week(ny_day), 7) + 1
-  end
-
-  defp build_X(DateTime[hour: hour, minute: minute, second: second]) do
-    "#{two(hour)}:#{two(minute)}:#{two(second)}"
-  end
-
-  defp build_x(DateTime[year: year, month: month, day: day]) do
-    "#{two(month)}/#{two(day)}/#{two(year)}"
-  end
-
-  defp build_V(time = DateTime[year: year, month: month, day: day]) do
-    wd = day_of_week(time)
-    case { month, day } do
-      { 1, 1 } when wd == 0 or wd == 5 or wd == 6 ->
-        do_build_V(DateTime[year: year - 1, month: 12, day: 31])
-      { 1, 2 } when wd == 0 or wd == 6 ->
-        do_build_V(DateTime[year: year - 1, month: 12, day: 31])
-      { 1, 3 } when wd == 0 ->
-        do_build_V(DateTime[year: year - 1, month: 12, day: 31])
-      { 12, 29 } when wd == 1 ->
-        do_build_V(DateTime[year: year + 1, month: 1, day: 1])
-      { 12, 30 } when wd == 1 or wd == 2 ->
-        do_build_V(DateTime[year: year + 1, month: 1, day: 1])
-      { 12, 31 } when wd == 1 or wd == 2 or wd == 3 ->
-        do_build_V(DateTime[year: year + 1, month: 1, day: 1])
-      _ ->
-        do_build_V(time)
-    end
-  end
-
-  defp do_build_V(time = DateTime[year: year]) do
-    diff = (time |> day_of_year) - monday_in_first_thursday_week(year)
-    two(div(diff, 7) + 1)
-  end
-
-  defp monday_in_first_thursday_week(year) do
-    ny_day = DateTime.new(year: year)
-    rem(11 - day_of_week(ny_day), 7) - 2
-  end
-
-  defp build_v(DateTime[year: year, month: month, day: day]) do
-    "#{space_two(day)}-#{month_name_s(month)}-#{four(year)}"
-  end
-
-  defp hour12(hour) do
-    rem(hour + 11, 12) + 1
-  end
-
-  defp am_pm_s(hour) do
-    if hour < 12, do: "am", else: "pm"
-  end
-
-  defp am_pm(hour) do
-    if hour < 12, do: "AM", else: "PM"
+  defp just_three_digit(n) do
+    integer_to_binary(n)
   end
 
   def new_offset(time = DateTime[offset: offset], new_o) do
@@ -595,18 +454,25 @@ end
 
 defimpl Binary.Inspect, for: DateTime do
   import Kernel, except: [inspect: 2]
-  import Calendar.Utils
 
   def inspect(DateTime[year: year, month: month, day: day,
                        hour: hour, minute: minute, second: second, offset: offset], _) do
-    ([year, two(month), two(day)] |> Enum.join("-")) <>
+    ([year, just_two_digit(month), just_two_digit(day)] |> Enum.join("-")) <>
     " " <>
-    ([two(hour), two(minute), two(second)] |> Enum.join(":")) <>
+    ([just_two_digit(hour), just_two_digit(minute), just_two_digit(second)] |> Enum.join(":")) <>
     offset_inspect(offset)
   end
 
   defp offset_inspect({ hour, min }) do
     sign = if hour < 0 , do: "-", else: "+"
-    sign <> two(abs(hour)) <> ":" <> two(abs(min))
+    sign <> just_two_digit(abs(hour)) <> ":" <> just_two_digit(abs(min))
+  end
+
+  defp just_two_digit(n) when n < 10 do
+    "0" <> integer_to_binary(n)
+  end
+
+  defp just_two_digit(n) do
+    integer_to_binary(n)
   end
 end
