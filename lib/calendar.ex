@@ -159,14 +159,53 @@ defmodule Calendar do
   """
   def day_of_year(DateTime[year: year, month: month, day: day]) do
     day +
-      if leap_year_y?(year) do
+      if is_leap?(year) do
         leap_year_yday_offset(month)
       else
         common_year_yday_offset(month)
       end
   end
 
+  @doc """
+  year
+  """
+  def year(DateTime[year: year]), do: year
 
+  @doc """
+  month
+  """
+  def month(DateTime[month: month]), do: month
+
+  @doc """
+  day
+  """
+  def day(DateTime[day: day]), do: day
+
+  @doc """
+  hour
+  """
+  def hour(DateTime[hour: hour]), do: hour
+
+  @doc """
+  minute
+  """
+  def minute(DateTime[minute: minute]), do: minute
+
+  @doc """
+  second
+  """
+  def second(DateTime[second: second]), do: second
+
+  @doc """
+  leap?
+  """
+  def is_leap?(DateTime[year: year]) do
+    C.is_leap_year(year)
+  end
+
+  def is_leap?(year) when is_integer(year) do
+    C.is_leap_year(year)
+  end
 
   ## private
 
@@ -230,10 +269,6 @@ defmodule Calendar do
   defp do_minus(time = DateTime[], list) do
     list = Enum.map(list, -&1)
     do_plus(time, list)
-  end
-
-  defp leap_year_y?(year) do
-    rem(year, 4) == 0 && rem(year, 100) != 0 || rem(year, 400) == 0
   end
 
   defp diff_nano(a = DateTime[], b = DateTime[]) do

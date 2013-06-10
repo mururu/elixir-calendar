@@ -141,6 +141,46 @@ defmodule CalendarTest do
     t = DateTime.new(year: 2013, month: 6, day: 11)
     assert Calendar.day_of_year(t) == 162
   end
+
+  test :year do
+    t = DateTime.new(year: 2013)
+    assert Calendar.year(t) == 2013
+  end
+
+  test :month do
+    t = DateTime.new(month: 1)
+    assert Calendar.month(t) == 1
+  end
+
+  test :day do
+    t = DateTime.new(day: 2)
+    assert Calendar.day(t) == 2
+  end
+
+  test :hour do
+    t = DateTime.new(hour: 3)
+    assert Calendar.hour(t) == 3
+  end
+
+  test :minute do
+    t = DateTime.new(minute: 4)
+    assert Calendar.minute(t) == 4
+  end
+
+  test :second do
+    t = DateTime.new(second: 5)
+    assert Calendar.second(t) == 5
+  end
+
+  test :is_leap? do
+    t1 = DateTime.new(year: 2000)
+    t2 = DateTime.new(year: 2100)
+    assert Calendar.is_leap?(t1)
+    refute Calendar.is_leap?(t2)
+
+    assert Calendar.is_leap?(2000)
+    refute Calendar.is_leap?(2100)
+  end
 end
 
 defmodule Calendar.FormatTest do
