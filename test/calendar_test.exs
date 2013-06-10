@@ -125,27 +125,45 @@ defmodule CalendarTest do
     t2 = DateTime.new(year: 2000, month: 1, day: 1, hour: 0, minute: 0, second: 30)
     assert Calendar.diff(t1, t2) == 30
   end
+
+  test :day_of_week do
+    t = DateTime.new(year: 2013, month: 6, day: 8)
+    assert Calendar.day_of_week(t) == 6
+
+    t = DateTime.new(year: 2013, month: 6, day: 9)
+    assert Calendar.day_of_week(t) == 0
+  end
+
+  test :day_of_year do
+    t = DateTime.new(year: 2013, month: 1, day: 1)
+    assert Calendar.day_of_year(t) == 1
+
+    t = DateTime.new(year: 2013, month: 6, day: 11)
+    assert Calendar.day_of_year(t) == 162
+  end
 end
 
 defmodule Calendar.FormatTest do
   use ExUnit.Case, async: true
-
-  test "YY" do
-    t = DateTime.new(year: 2013)
-    assert Calendar.format(t, "YY") == "13"
-  end
 
   test "YYYY" do
     t = DateTime.new(year: 2013)
     assert Calendar.format(t, "YYYY") == "2013"
   end
 
-  test "M" do
-    t = DateTime.new(month: 6)
-    assert Calendar.format(t, "M") == "6"
+  test "YY" do
+    t = DateTime.new(year: 2013)
+    assert Calendar.format(t, "YY") == "13"
+  end
 
-    t = DateTime.new(month: 10)
-    assert Calendar.format(t, "M") == "10"
+  test "MMMM" do
+    t = DateTime.new(month: 6)
+    assert Calendar.format(t, "MMMM") == "June"
+  end
+
+  test "MMM" do
+    t = DateTime.new(month: 6)
+    assert Calendar.format(t, "MMM") == "Jun"
   end
 
   test "MM" do
@@ -156,22 +174,12 @@ defmodule Calendar.FormatTest do
     assert Calendar.format(t, "MM") == "10"
   end
 
-  test "MMM" do
+  test "M" do
     t = DateTime.new(month: 6)
-    assert Calendar.format(t, "MMM") == "Jun"
-  end
+    assert Calendar.format(t, "M") == "6"
 
-  test "MMMM" do
-    t = DateTime.new(month: 6)
-    assert Calendar.format(t, "MMMM") == "June"
-  end
-
-  test "d" do
-    t = DateTime.new(day: 9)
-    assert Calendar.format(t, "d") == "9"
-
-    t = DateTime.new(day: 15)
-    assert Calendar.format(t, "d") == "15"
+    t = DateTime.new(month: 10)
+    assert Calendar.format(t, "M") == "10"
   end
 
   test "dd" do
@@ -182,9 +190,12 @@ defmodule Calendar.FormatTest do
     assert Calendar.format(t, "dd") == "15"
   end
 
-  test "EE" do
-    t = DateTime.new(year: 2013, month: 6, day: 9)
-    assert Calendar.format(t, "EE") == "Sun"
+  test "d" do
+    t = DateTime.new(day: 9)
+    assert Calendar.format(t, "d") == "9"
+
+    t = DateTime.new(day: 15)
+    assert Calendar.format(t, "d") == "15"
   end
 
   test "EEEE" do
@@ -192,18 +203,9 @@ defmodule Calendar.FormatTest do
     assert Calendar.format(t, "EEEE") == "Sunday"
   end
 
-  test "h" do
-    t = DateTime.new(hour: 3)
-    assert Calendar.format(t, "h") == "3"
-
-    t = DateTime.new(hour: 11)
-    assert Calendar.format(t, "h") == "11"
-
-    t = DateTime.new(hour: 15)
-    assert Calendar.format(t, "h") == "3"
-
-    t = DateTime.new(hour: 23)
-    assert Calendar.format(t, "h") == "11"
+  test "EE" do
+    t = DateTime.new(year: 2013, month: 6, day: 9)
+    assert Calendar.format(t, "EE") == "Sun"
   end
 
   test "hh" do
@@ -220,12 +222,18 @@ defmodule Calendar.FormatTest do
     assert Calendar.format(t, "hh") == "11"
   end
 
-  test "H" do
+  test "h" do
     t = DateTime.new(hour: 3)
-    assert Calendar.format(t, "H") == "3"
+    assert Calendar.format(t, "h") == "3"
+
+    t = DateTime.new(hour: 11)
+    assert Calendar.format(t, "h") == "11"
+
+    t = DateTime.new(hour: 15)
+    assert Calendar.format(t, "h") == "3"
 
     t = DateTime.new(hour: 23)
-    assert Calendar.format(t, "H") == "23"
+    assert Calendar.format(t, "h") == "11"
   end
 
   test "HH" do
@@ -236,20 +244,20 @@ defmodule Calendar.FormatTest do
     assert Calendar.format(t, "HH") == "23"
   end
 
+  test "H" do
+    t = DateTime.new(hour: 3)
+    assert Calendar.format(t, "H") == "3"
+
+    t = DateTime.new(hour: 23)
+    assert Calendar.format(t, "H") == "23"
+  end
+
   test "a" do
     t = DateTime.new(hour: 11)
     assert Calendar.format(t, "a") == "AM"
 
     t = DateTime.new(hour: 12)
     assert Calendar.format(t, "a") == "PM"
-  end
-
-  test "m" do
-    t = DateTime.new(minute: 3)
-    assert Calendar.format(t, "m") == "3"
-
-    t = DateTime.new(minute: 33)
-    assert Calendar.format(t, "m") == "33"
   end
 
   test "mm" do
@@ -260,12 +268,12 @@ defmodule Calendar.FormatTest do
     assert Calendar.format(t, "mm") == "33"
   end
 
-  test "s" do
-    t = DateTime.new(second: 3)
-    assert Calendar.format(t, "s") == "3"
+  test "m" do
+    t = DateTime.new(minute: 3)
+    assert Calendar.format(t, "m") == "3"
 
-    t = DateTime.new(second: 33)
-    assert Calendar.format(t, "s") == "33"
+    t = DateTime.new(minute: 33)
+    assert Calendar.format(t, "m") == "33"
   end
 
   test "ss" do
@@ -276,23 +284,12 @@ defmodule Calendar.FormatTest do
     assert Calendar.format(t, "ss") == "33"
   end
 
-  test "S" do
-    t = DateTime.new(nanosecond: 123000)
-    assert Calendar.format(t, "S") == "1"
+  test "s" do
+    t = DateTime.new(second: 3)
+    assert Calendar.format(t, "s") == "3"
 
-    t = DateTime.new(nanosecond: 12300)
-    assert Calendar.format(t, "S") == "0"
-  end
-
-  test "SS" do
-    t = DateTime.new(nanosecond: 123000)
-    assert Calendar.format(t, "SS") == "12"
-
-    t = DateTime.new(nanosecond: 12300)
-    assert Calendar.format(t, "SS") == "01"
-
-    t = DateTime.new(nanosecond: 1230)
-    assert Calendar.format(t, "SS") == "00"
+    t = DateTime.new(second: 33)
+    assert Calendar.format(t, "s") == "33"
   end
 
   test "SSS" do
@@ -306,12 +303,23 @@ defmodule Calendar.FormatTest do
     assert Calendar.format(t, "SSS") == "001"
   end
 
-  test "Z" do
-    t = DateTime.new(offset: { 0, 0 })
-    assert Calendar.format(t, "Z") == "+0000"
+  test "SS" do
+    t = DateTime.new(nanosecond: 123000)
+    assert Calendar.format(t, "SS") == "12"
 
-    t = DateTime.new(offset: { -11, 30 })
-    assert Calendar.format(t, "Z") == "-1130"
+    t = DateTime.new(nanosecond: 12300)
+    assert Calendar.format(t, "SS") == "01"
+
+    t = DateTime.new(nanosecond: 1230)
+    assert Calendar.format(t, "SS") == "00"
+  end
+
+  test "S" do
+    t = DateTime.new(nanosecond: 123000)
+    assert Calendar.format(t, "S") == "1"
+
+    t = DateTime.new(nanosecond: 12300)
+    assert Calendar.format(t, "S") == "0"
   end
 
   test "ZZ" do
@@ -320,6 +328,14 @@ defmodule Calendar.FormatTest do
 
     t = DateTime.new(offset: { -11, 30 })
     assert Calendar.format(t, "ZZ") == "-11:30"
+  end
+
+  test "Z" do
+    t = DateTime.new(offset: { 0, 0 })
+    assert Calendar.format(t, "Z") == "+0000"
+
+    t = DateTime.new(offset: { -11, 30 })
+    assert Calendar.format(t, "Z") == "-1130"
   end
 
   test "escape" do

@@ -9,10 +9,10 @@ defmodule Calendar do
   Universal Time
   """
   def universal_time do
-    { megasecond, second, microsecond } = :erlang.now
+    now = :erlang.now
 
-    {{ year, month, day }, { hour, minute, second }} =
-      C.now_to_universal_time({ megasecond, second, microsecond })
+    {{ year, month, day }, { hour, minute, second }} = C.now_to_universal_time(now)
+    { _megasecond, _second, microsecond } = now
 
     DateTime.new [year: year, month: month, day: day,
                   hour: hour, minute: minute, second: second,
@@ -23,14 +23,11 @@ defmodule Calendar do
   Local Time
   """
   def local_time do
-    { megasecond, second, microsecond } = :erlang.now
+    now = :erlang.now
 
-    l = C.now_to_local_time({ megasecond, second, microsecond })
-    u = C.now_to_universal_time({ megasecond, second, microsecond })
-
-    offset = calc_offset(l, u)
-
-    {{ year, month, day }, { hour, minute, second }} = l
+    {{ year, month, day }, { hour, minute, second }} = C.now_to_local_time(now)
+    { _megasecond, _second, microsecond } = now
+    offset = calc_offset
 
     DateTime.new [year: year, month: month, day: day,
                   hour: hour, minute: minute, second: second,
@@ -150,12 +147,36 @@ defmodule Calendar do
     seconds1 - seconds2
   end
 
+  @doc """
+  day of week
+  """
+  def day_of_week(DateTime[year: year, month: month, day: day]) do
+    C.day_of_the_week({ year, month, day }) |> convert_day_of_week
+  end
+
+  @doc """
+  day of year
+  """
+  def day_of_year(DateTime[year: year, month: month, day: day]) do
+    day +
+      if leap_year_y?(year) do
+        leap_year_yday_offset(month)
+      else
+        common_year_yday_offset(month)
+      end
+  end
+
+
+
   ## private
 
-  defp calc_offset(local, universal) do
-    ls = local |> from_tuple |> to_seconds
-    us = universal |> from_tuple |> to_seconds
-    min = div(ls , 60) - div(us, 60)
+  defp calc_offset do
+    now = :erlang.now
+
+    local = now |> C.now_to_local_time |> C.datetime_to_gregorian_seconds
+    universal = now |> C.now_to_universal_time |> C.datetime_to_gregorian_seconds
+
+    min = div(local , 60) - div(universal, 60)
     h = div(abs(min), 60)
     m = rem(abs(min), 60)
     if min >= 0, do: { h, m }, else: { -h, m }
@@ -209,19 +230,6 @@ defmodule Calendar do
   defp do_minus(time = DateTime[], list) do
     list = Enum.map(list, -&1)
     do_plus(time, list)
-  end
-
-  defp day_of_week(DateTime[year: year, month: month, day: day]) do
-    C.day_of_the_week({ year, month, day }) |> convert_day_of_week
-  end
-
-  def day_of_year(DateTime[year: year, month: month, day: day]) do
-    day +
-      if leap_year_y?(year) do
-        leap_year_yday_offset(month)
-      else
-        common_year_yday_offset(month)
-      end
   end
 
   defp leap_year_y?(year) do
