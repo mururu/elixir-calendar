@@ -329,4 +329,14 @@ defmodule Calendar.FormatTest do
     assert Calendar.format(t, "'''") == "'"
     assert Calendar.format(t, "'a''a'a'a'") == "aaAMa"
   end
+
+  test "rfc" do
+    t = DateTime.new(year: 2013, month: 3, day: 1, hour: 20, minute: 3, second: 15, offset: { -3, 30 })
+    assert Calendar.format(t, "EE, dd MMM YYYY HH:mm:ss Z") == "Fri, 01 Mar 2013 20:03:15 -0330"
+  end
+
+  test "utf8" do
+    t = DateTime.new(year: 2013)
+    assert Calendar.format(t, "YYあYY'い'") == "13あ13い"
+  end
 end
