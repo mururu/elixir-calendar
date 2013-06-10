@@ -108,21 +108,21 @@ defmodule Calendar do
   equal?
   """
   def equal?(a = DateTime[], b = DateTime[]) do
-    diff(a, b) == 0
+    diff_nano(a, b) == 0
   end
 
   @doc """
   is_after?
   """
   def is_after?(a = DateTime[], b = DateTime[]) do
-    diff(a, b) > 0
+    diff_nano(a, b) > 0
   end
 
   @doc """
   is_before?
   """
   def is_before?(a = DateTime[], b = DateTime[]) do
-    diff(a, b) < 0
+    diff_nano(a, b) < 0
   end
 
   @doc """
@@ -139,6 +139,15 @@ defmodule Calendar do
   """
   def format(time = DateTime[], string) do
     do_format(time, string)
+  end
+
+  @doc """
+  diff seconds
+  """
+  def diff(DateTime[] = t1, DateTime[] = t2) do
+    seconds1 = t1 |> change_offset({ 0, 0 }) |> to_seconds
+    seconds2 = t2 |> change_offset({ 0, 0 }) |> to_seconds
+    seconds1 - seconds2
   end
 
   ## private
@@ -219,7 +228,7 @@ defmodule Calendar do
     rem(year, 4) == 0 && rem(year, 100) != 0 || rem(year, 400) == 0
   end
 
-  defp diff(a = DateTime[], b = DateTime[]) do
+  defp diff_nano(a = DateTime[], b = DateTime[]) do
     ((change_offset(a, { 0, 0 }) |> to_seconds) * 1000000000 + a.nanosecond) -
       ((change_offset(b, { 0, 0 }) |> to_seconds) * 1000000000 + b.nanosecond)
   end

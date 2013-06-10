@@ -119,6 +119,12 @@ defmodule CalendarTest do
     refute Calendar.is_before?(t1, t2)
     assert Calendar.is_before?(t2, t1)
   end
+
+  test :diff do
+    t1 = DateTime.new(year: 2000, month: 1, day: 1, hour: 0, minute: 1, second: 0)
+    t2 = DateTime.new(year: 2000, month: 1, day: 1, hour: 0, minute: 0, second: 30)
+    assert Calendar.diff(t1, t2) == 30
+  end
 end
 
 defmodule Calendar.FormatTest do
