@@ -139,6 +139,13 @@ defmodule Calendar do
   end
 
   @doc """
+  String -> DateTime
+  """
+  def parse(string, formatter) do
+    do_parse(string, formatter)
+  end
+
+  @doc """
   diff seconds
   """
   def diff(DateTime[] = t1, DateTime[] = t2) do
@@ -405,6 +412,465 @@ defmodule Calendar do
     <<>>
   end
 
+  defp do_parse(string, formatter) do
+    regex = compile_to_regex(formatter)
+    list = Regex.captures(regex, string) || []
+    build_datetime(list)
+  end
+
+  defp build_datetime(list) do
+    Enum.reduce list, DateTime.new, fn({ key, value }, t) ->
+      case build(key, value) do
+        { key, value } ->
+          apply(DateTime, key, [value, t])
+        nil ->
+          t
+      end
+    end
+  end
+
+  def build(:YYYY, value) do
+    { :year, binary_to_integer(value) }
+  end
+
+  def build(:YY, value) do
+    { :year, binary_to_integer("20" <> value) }
+  end
+
+  def build(:MMMM, value) do
+    { :month, month_num(value) }
+  end
+
+  def build(:MMM, value) do
+    { :month, month_num_s(value) }
+  end
+
+  def build(:MM, value) do
+    { :month, binary_to_integer(value) }
+  end
+
+  def build(:M, value) do
+    { :month, binary_to_integer(value) }
+  end
+
+  def build(:dd, value) do
+    { :day, binary_to_integer(value) }
+  end
+
+  def build(:d, value) do
+    { :day, binary_to_integer(value) }
+  end
+
+  ## TODO
+  def build(:EEEE, _value) do
+    nil
+  end
+
+  def build(:EE, _value) do
+    nil
+  end
+
+  ## TODO: consider AM or PM
+  def build(:hh, value) do
+    { :hour, binary_to_integer(value) }
+  end
+
+  def build(:h, value) do
+    { :hour, binary_to_integer(value) }
+  end
+
+  def build(:HH, value) do
+    { :hour, binary_to_integer(value) }
+  end
+
+  def build(:H, value) do
+    { :hour, binary_to_integer(value) }
+  end
+
+  ## TODO
+  def build(:a, value) do
+    nil
+  end
+
+  def build(:mm, value) do
+    { :minute, binary_to_integer(value) }
+  end
+
+  def build(:m, value) do
+    { :minute, binary_to_integer(value) }
+  end
+
+  def build(:ss, value) do
+    { :second, binary_to_integer(value) }
+  end
+
+  def build(:s, value) do
+    { :second, binary_to_integer(value) }
+  end
+
+  def build(:SSS, value) do
+    { :nanosecond, binary_to_integer(value <> "000") }
+  end
+
+  def build(:SS, value) do
+    { :nanosecond, binary_to_integer(value <> "0000") }
+  end
+
+  def build(:S, value) do
+    { :nanosecond, binary_to_integer(value <> "00000") }
+  end
+
+  def build(:ZZ, value) do
+    tokens = Regex.captures(%r/(?<sign>(\+|-))(?<hour>\d{2}):(?<minute>\d{2})/g, value)
+    build_offset(tokens)
+  end
+
+  def build(:Z, value) do
+    tokens = Regex.captures(%r/(?<sign>(\+|-))(?<hour>\d{2})(?<minute>\d{2})/g, value)
+    build_offset(tokens)
+  end
+
+  defp build_offset(tokens) do
+    case tokens[:sign] do
+      "+" ->
+        { :offset, { binary_to_integer(tokens[:hour]), binary_to_integer(tokens[:minute]) } }
+      "-" ->
+        { :offset, { -1 * binary_to_integer(tokens[:hour]), binary_to_integer(tokens[:minute]) } }
+    end
+  end
+
+  defrecordp :format_flg, [:YYYY, :YY, :MMMM, :MMM, :MM, :M, :dd, :d, :EEEE, :EE, :hh, :h, :HH, :H, :a, :mm, :m, :ss, :s, :SSS, :SS, :S, :ZZ, :Z]
+
+  def compile_to_regex(formatter) do
+    tokens = compile_to_regex(formatter, [])
+    seed = form_regex(tokens, format_flg(), "")
+    ("^" <> seed <> "$") |> Regex.compile!("g")
+  end
+
+  defp form_regex([:YYYY|t], format_flg(YYYY: true) = flg, s) do
+    form_regex(t, flg, "\\d{4}" <> s)
+  end
+
+  defp form_regex([:YYYY|t], format_flg(YYYY: _) = flg, s) do
+    form_regex(t, format_flg(flg, YYYY: true), "(?<YYYY>\\d{4})" <> s)
+  end
+
+  defp form_regex([:YY|t], format_flg(YY: true) = flg, s) do
+    form_regex(t, flg, "\\d{2}" <> s)
+  end
+
+  defp form_regex([:YY|t], format_flg(YY: _) = flg, s) do
+    form_regex(t, format_flg(flg, YY: true), "(?<YY>\\d{2})" <> s)
+  end
+
+  defp form_regex([:MMMM|t], format_flg(MMMM: true) = flg, s) do
+    ml = "(January|Feburuary|March|April|May|June|July|August|September|October|November|December)"
+    form_regex(t, flg, ml <> s)
+  end
+
+  defp form_regex([:MMMM|t], format_flg(MMMM: _) = flg, s) do
+    ml = "(January|Feburuary|March|April|May|June|July|August|September|October|November|December)"
+    form_regex(t, format_flg(flg, MMMM: true), "(?<MMMM>#{ml})" <> s)
+  end
+
+  defp form_regex([:MMM|t], format_flg(MMM: true) = flg, s) do
+    ml = "(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oc|Nov|Dec)"
+    form_regex(t, flg, ml <> s)
+  end
+
+  defp form_regex([:MMM|t], format_flg(MMM: _) = flg, s) do
+    ml = "(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oc|Nov|Dec)"
+    form_regex(t, format_flg(flg, MMM: true), "(?<MMM>#{ml})" <> s)
+  end
+
+  defp form_regex([:MM|t], format_flg(MM: true) = flg, s) do
+    form_regex(t, flg, "\\d{2}" <> s)
+  end
+
+  defp form_regex([:MM|t], format_flg(MM: _) = flg, s) do
+    form_regex(t, format_flg(flg, MM: true), "(?<MM>\\d{2})" <> s)
+  end
+
+  defp form_regex([:dd|t], format_flg(dd: true) = flg, s) do
+    form_regex(t, flg, "\\d{2}" <> s)
+  end
+
+  defp form_regex([:dd|t], format_flg(dd: _) = flg, s) do
+    form_regex(t, format_flg(flg, dd: true), "(?<dd>\\d{2})" <> s)
+  end
+
+  defp form_regex([:d|t], format_flg(d: true) = flg, s) do
+    form_regex(t, flg, "\\d{1,2}" <> s)
+  end
+
+  defp form_regex([:d|t], format_flg(d: _) = flg, s) do
+    form_regex(t, format_flg(flg, d: true), "(?<d>\\d{1,2})" <> s)
+  end
+
+  defp form_regex([:EEEE|t], format_flg(EEEE: true) = flg, s) do
+    wl = "(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)"
+    form_regex(t, flg, wl <> s)
+  end
+
+  defp form_regex([:EEEE|t], format_flg(EEEE: _) = flg, s) do
+    wl = "(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)"
+    form_regex(t, format_flg(flg, EEEE: true), "(?<EEEE>#{wl})" <> s)
+  end
+
+  defp form_regex([:EE|t], format_flg(EE: true) = flg, s) do
+    wl = "(Sun|Mon|Tue|Wed|Thu|Fri|Sat)"
+    form_regex(t, flg, wl <> s)
+  end
+
+  defp form_regex([:EE|t], format_flg(EE: _) = flg, s) do
+    wl = "(Sun|Mon|Tue|Wed|Thu|Fri|Sat)"
+    form_regex(t, format_flg(flg, EE: true), "(?<EE>#{wl})" <> s)
+  end
+
+  defp form_regex([:hh|t], format_flg(hh: true) = flg, s) do
+    form_regex(t, flg, "\\d{2}" <> s)
+  end
+
+  defp form_regex([:hh|t], format_flg(hh: _) = flg, s) do
+    form_regex(t, format_flg(flg, hh: true), "(?<hh>\\d{2})" <> s)
+  end
+
+  defp form_regex([:h|t], format_flg(h: true) = flg, s) do
+    form_regex(t, flg, "\\d{1,2}" <> s)
+  end
+
+  defp form_regex([:h|t], format_flg(h: _) = flg, s) do
+    form_regex(t, format_flg(flg, h: true), "(?<h>\\d{1,2})" <> s)
+  end
+
+  defp form_regex([:HH|t], format_flg(HH: true) = flg, s) do
+    form_regex(t, flg, "\\d{2}" <> s)
+  end
+
+  defp form_regex([:HH|t], format_flg(HH: _) = flg, s) do
+    form_regex(t, format_flg(flg, HH: true), "(?<HH>\\d{2})" <> s)
+  end
+
+  defp form_regex([:H|t], format_flg(H: true) = flg, s) do
+    form_regex(t, flg, "\\d{1,2}" <> s)
+  end
+
+  defp form_regex([:H|t], format_flg(H: _) = flg, s) do
+    form_regex(t, format_flg(flg, H: true), "(?<H>\\d{1,2})" <> s)
+  end
+
+  defp form_regex([:a|t], format_flg(a: true) = flg, s) do
+    form_regex(t, flg, "(AM|PM)" <> s)
+  end
+
+  defp form_regex([:a|t], format_flg(a: _) = flg, s) do
+    form_regex(t, format_flg(flg, a: true), "(?<a>(AM|PM))" <> s)
+  end
+
+  defp form_regex([:mm|t], format_flg(mm: true) = flg, s) do
+    form_regex(t, flg, "\\d{2}" <> s)
+  end
+
+  defp form_regex([:mm|t], format_flg(mm: _) = flg, s) do
+    form_regex(t, format_flg(flg, mm: true), "(?<mm>\\d{2})" <> s)
+  end
+
+  defp form_regex([:m|t], format_flg(m: true) = flg, s) do
+    form_regex(t, flg, "\\d{1,2}" <> s)
+  end
+
+  defp form_regex([:m|t], format_flg(m: _) = flg, s) do
+    form_regex(t, format_flg(flg, m: true), "(?<m>\\d{1,2})" <> s)
+  end
+
+  defp form_regex([:ss|t], format_flg(ss: true) = flg, s) do
+    form_regex(t, flg, "\\d{2}" <> s)
+  end
+
+  defp form_regex([:ss|t], format_flg(ss: _) = flg, s) do
+    form_regex(t, format_flg(flg, ss: true), "(?<ss>\\d{2})" <> s)
+  end
+
+  defp form_regex([:s|t], format_flg(s: true) = flg, s) do
+    form_regex(t, flg, "\\d{1,2}" <> s)
+  end
+
+  defp form_regex([:s|t], format_flg(s: _) = flg, s) do
+    form_regex(t, format_flg(flg, s: true), "(?<s>\\d{1,2})" <> s)
+  end
+
+  defp form_regex([:SSS|t], format_flg(SSS: true) = flg, s) do
+    form_regex(t, flg, "\\d{3}" <> s)
+  end
+
+  defp form_regex([:SSS|t], format_flg(SSS: _) = flg, s) do
+    form_regex(t, format_flg(flg, SSS: true), "(?<SSS>\\d{3})" <> s)
+  end
+
+  defp form_regex([:SS|t], format_flg(SS: true) = flg, s) do
+    form_regex(t, flg, "\\d{2}" <> s)
+  end
+
+  defp form_regex([:SS|t], format_flg(SS: _) = flg, s) do
+    form_regex(t, format_flg(flg, SS: true), "(?<SS>\\d{2})" <> s)
+  end
+
+  defp form_regex([:S|t], format_flg(S: true) = flg, s) do
+    form_regex(t, flg, "\\d{1}" <> s)
+  end
+
+  defp form_regex([:S|t], format_flg(S: _) = flg, s) do
+    form_regex(t, format_flg(flg, S: true), "(?<S>\\d{1})" <> s)
+  end
+
+  defp form_regex([:ZZ|t], format_flg(ZZ: true) = flg, s) do
+    form_regex(t, flg, "[+-]\\d{2}:\\d{2}" <> s)
+  end
+
+  defp form_regex([:ZZ|t], format_flg(ZZ: _) = flg, s) do
+    form_regex(t, format_flg(flg, ZZ: true), "(?<ZZ>[+-]\\d{2}:\\d{2})" <> s)
+  end
+
+  defp form_regex([:Z|t], format_flg(Z: true) = flg, s) do
+    form_regex(t, flg, "[+-]\\d{4}" <> s)
+  end
+
+  defp form_regex([:Z|t], format_flg(Z: _) = flg, s) do
+    form_regex(t, format_flg(flg, Z: true), "(?<Z>[+-]\\d{4})" <> s)
+  end
+
+  defp form_regex([bin|t], format_flg() = flg, s) when is_binary(bin) do
+    form_regex(t, flg, bin <> s)
+  end
+
+  defp form_regex([], format_flg() = _flg, s) do
+    s
+  end
+
+  defp compile_to_regex("YYYY" <> rest, list) do
+    compile_to_regex(rest, [:YYYY|list])
+  end
+
+  defp compile_to_regex("YY" <> rest, list) do
+    compile_to_regex(rest, [:YY|list])
+  end
+
+  defp compile_to_regex("MMMM" <> rest, list) do
+    compile_to_regex(rest, [:MMMM|list])
+  end
+
+  defp compile_to_regex("MMM" <> rest, list) do
+    compile_to_regex(rest, [:MMM|list])
+  end
+
+  defp compile_to_regex("MM" <> rest, list) do
+    compile_to_regex(rest, [:MM|list])
+  end
+
+  defp compile_to_regex("M" <> rest, list) do
+    compile_to_regex(rest, [:M|list])
+  end
+
+  defp compile_to_regex("dd" <> rest, list) do
+    compile_to_regex(rest, [:dd|list])
+  end
+
+  defp compile_to_regex("d" <> rest, list) do
+    compile_to_regex(rest, [:d|list])
+  end
+
+  defp compile_to_regex("EEEE" <> rest, list) do
+    compile_to_regex(rest, [:EEEE|list])
+  end
+
+  defp compile_to_regex("EE" <> rest, list) do
+    compile_to_regex(rest, [:EE|list])
+  end
+
+  defp compile_to_regex("hh" <> rest, list) do
+    compile_to_regex(rest, [:hh|list])
+  end
+
+  defp compile_to_regex("h" <> rest, list) do
+    compile_to_regex(rest, [:h|list])
+  end
+
+  defp compile_to_regex("HH" <> rest, list) do
+    compile_to_regex(rest, [:HH|list])
+  end
+
+  defp compile_to_regex("H" <> rest, list) do
+    compile_to_regex(rest, [:H|list])
+  end
+
+  defp compile_to_regex("a" <> rest, list) do
+    compile_to_regex(rest, [:a|list])
+  end
+
+  defp compile_to_regex("mm" <> rest, list) do
+    compile_to_regex(rest, [:mm|list])
+  end
+
+  defp compile_to_regex("m" <> rest, list) do
+    compile_to_regex(rest, [:m|list])
+  end
+
+  defp compile_to_regex("ss" <> rest, list) do
+    compile_to_regex(rest, [:ss|list])
+  end
+
+  defp compile_to_regex("s" <> rest, list) do
+    compile_to_regex(rest, [:s|list])
+  end
+
+  defp compile_to_regex("SSS" <> rest, list) do
+    compile_to_regex(rest, [:SSS|list])
+  end
+
+  defp compile_to_regex("SS" <> rest, list) do
+    compile_to_regex(rest, [:SS|list])
+  end
+
+  defp compile_to_regex("S" <> rest, list) do
+    compile_to_regex(rest, [:S|list])
+  end
+
+  defp compile_to_regex("ZZ" <> rest, list) do
+    compile_to_regex(rest, [:ZZ|list])
+  end
+
+  defp compile_to_regex("Z" <> rest, list) do
+    compile_to_regex(rest, [:Z|list])
+  end
+
+  defp compile_to_regex("''" <> rest, list) do
+    compile_to_regex(rest, ["'"|list])
+  end
+
+  defp compile_to_regex("'" <> rest, list) do
+    compile_to_regex_escape(rest, list)
+  end
+
+  defp compile_to_regex(<< h, rest :: binary >>, list) when not (h in ?a..?z or h in ?A..?Z) do
+    compile_to_regex(rest, [<< h >>|list])
+  end
+
+  defp compile_to_regex(<<>>, list) do
+    list
+  end
+
+  defp compile_to_regex_escape("'" <> rest, list) do
+    compile_to_regex(rest, list)
+  end
+
+  defp compile_to_regex_escape(<< h, rest :: binary >>, list) do
+    compile_to_regex_escape(rest, [<< h >>|list])
+  end
+
+  defp compile_to_regex_escape(<<>>, list) do
+    list
+  end
+
   defp just_two_digit(n) when n < 10 do
     "0" <> integer_to_binary(n)
   end
@@ -471,6 +937,32 @@ defmodule Calendar do
   defp month_name_s(10), do: "Oct"
   defp month_name_s(11), do: "Nov"
   defp month_name_s(12), do: "Dec"
+
+  defp month_num("January"),   do: 1
+  defp month_num("Feburuary"), do: 2
+  defp month_num("March"),     do: 3
+  defp month_num("April"),     do: 4
+  defp month_num("May"),       do: 5
+  defp month_num("June"),      do: 6
+  defp month_num("July"),      do: 7
+  defp month_num("August"),    do: 8
+  defp month_num("September"), do: 9
+  defp month_num("October"),   do: 10
+  defp month_num("November"),  do: 11
+  defp month_num("December"),  do: 12
+
+  defp month_num_s("Jan"), do: 1
+  defp month_num_s("Feb"), do: 2
+  defp month_num_s("Mar"), do: 3
+  defp month_num_s("Apr"), do: 4
+  defp month_num_s("May"), do: 5
+  defp month_num_s("Jun"), do: 6
+  defp month_num_s("Jul"), do: 7
+  defp month_num_s("Aug"), do: 8
+  defp month_num_s("Sep"), do: 9
+  defp month_num_s("Oct"), do: 10
+  defp month_num_s("Nov"), do: 11
+  defp month_num_s("Dec"), do: 12
 
   defp convert_day_of_week(1), do: 1
   defp convert_day_of_week(2), do: 2

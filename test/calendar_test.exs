@@ -396,3 +396,13 @@ defmodule Calendar.FormatTest do
     assert Calendar.format(t, "YYあYY'い'") == "13あ13い"
   end
 end
+
+defmodule Calendar.ParseTest do
+  use ExUnit.Case, async: true
+
+  test "rfc" do
+    t1 = DateTime.new(year: 2013, month: 3, day: 1, hour: 20, minute: 3, second: 15, offset: { -3, 30 })
+    t2 = Calendar.parse("Fri, 01 Mar 2013 20:03:15 -0330", "EE, dd MMM YYYY HH:mm:ss Z")
+    assert Calendar.equal?(t1, t2)
+  end
+end
