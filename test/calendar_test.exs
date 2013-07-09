@@ -400,9 +400,175 @@ end
 defmodule Calendar.ParseTest do
   use ExUnit.Case, async: true
 
+  test "YYYY" do
+    t = Calendar.parse("2013", "YYYY")
+    assert t.year == 2013
+  end
+
+  test "YY" do
+    t = Calendar.parse("13", "YY")
+    assert t.year == 2013
+  end
+
+  test "MMMM" do
+    t = Calendar.parse("Feburuary", "MMMM")
+    assert t.month == 2
+  end
+
+  test "MMM" do
+    t = Calendar.parse("Feb", "MMM")
+    assert t.month == 2
+  end
+
+  test "MM" do
+    t = Calendar.parse("03", "MM")
+    assert t.month == 3
+  end
+
+  test "M" do
+    #t = Calendar.parse("3", "M")
+    #assert t.month == 3
+
+    #t = Calendar.parse("11", "M")
+    #assert t.month == 11
+  end
+
+  test "dd" do
+    t = Calendar.parse("03", "d")
+    assert t.day == 3
+  end
+
+  test "d" do
+    t = Calendar.parse("3", "d")
+    assert t.day == 3
+
+    t = Calendar.parse("11", "d")
+    assert t.day == 11
+  end
+
+  test "EEEE" do
+    Calendar.parse("Friday", "EEEE")
+  end
+
+  test "EE" do
+    Calendar.parse("Fri", "EE")
+  end
+
+  test "hh" do
+    t = Calendar.parse("03", "hh")
+    assert t.hour == 3
+  end
+
+  test "h" do
+    t = Calendar.parse("3", "h")
+    assert t.hour == 3
+
+    t = Calendar.parse("11", "h")
+    assert t.hour == 11
+  end
+
+  test "HH" do
+    t = Calendar.parse("03", "HH")
+    assert t.hour == 3
+  end
+
+  test "H" do
+    t = Calendar.parse("3", "H")
+    assert t.hour == 3
+
+    t = Calendar.parse("11", "H")
+    assert t.hour == 11
+  end
+
+  test "a" do
+    t = Calendar.parse("AM1", "ah")
+    assert t.hour == 1
+
+    #t = Calendar.parse("PM1", "ah")
+    #assert t.hour == 13
+
+    ## this should raise?
+    t = Calendar.parse("PM1", "aH")
+    assert t.hour == 1
+
+    #t = Calendar.parse("PM", "a")
+    #assert t.hour == 12
+  end
+
+  test "mm" do
+    t = Calendar.parse("03", "mm")
+    assert t.minute == 3
+  end
+
+  test "m" do
+    t = Calendar.parse("3", "m")
+    assert t.minute == 3
+
+    t = Calendar.parse("11", "m")
+    assert t.minute == 11
+  end
+
+  test "ss" do
+    t = Calendar.parse("03", "ss")
+    assert t.second == 3
+  end
+
+  test "s" do
+    t = Calendar.parse("3", "s")
+    assert t.second == 3
+
+    t = Calendar.parse("11", "s")
+    assert t.second == 11
+  end
+
+  test "SSS" do
+    t = Calendar.parse("123", "SSS")
+    assert t.nanosecond == 123000
+  end
+
+  test "SS" do
+    t = Calendar.parse("12", "SS")
+    assert t.nanosecond == 120000
+  end
+
+  test "S" do
+    t = Calendar.parse("1", "S")
+    assert t.nanosecond == 100000
+  end
+
+  test "ZZ" do
+    t = Calendar.parse("-12:30", "ZZ")
+    assert t.offset == { -12, 30 }
+  end
+
+  test "Z" do
+    t = Calendar.parse("+0315", "Z")
+    assert t.offset == { 3, 15 }
+  end
+
+  test "escape" do
+    t = Calendar.parse("aa12a", "'a''a'd'a'")
+    assert t.day == 12
+  end
+
+  test "ambiguity" do
+    t = Calendar.parse("111", "dh")
+    assert t.day == 11
+    assert t.hour == 1
+
+    t = Calendar.parse("111", "dhh")
+    assert t.day == 1
+    assert t.hour == 11
+  end
+
   test "rfc" do
     t1 = DateTime.new(year: 2013, month: 3, day: 1, hour: 20, minute: 3, second: 15, offset: { -3, 30 })
     t2 = Calendar.parse("Fri, 01 Mar 2013 20:03:15 -0330", "EE, dd MMM YYYY HH:mm:ss Z")
     assert Calendar.equal?(t1, t2)
+  end
+
+  test "utf8" do
+    t = Calendar.parse("11あ12い", "YYあYY'い'")
+    assert t.year == 2012
   end
 end
