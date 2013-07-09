@@ -27,7 +27,7 @@ iex(6)> time1 = Calendar.local_time
 iex(7)> time2 = Calendar.local_time
 2013-07-10 02:52:15+09:00
 
-iex(8)> time2.is_after? time1
+iex(8)> Calendar.is_before?(time1, time2)
 true
 
 iex(9)> Calendar.parse("Fri, 01 Mar 2013 20:03:15 -0330", "EE, dd MMM YYYY HH:mm:ss Z")
