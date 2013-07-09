@@ -1,36 +1,37 @@
-# DateTime for Elixir
-
-[![Build Status](https://travis-ci.org/mururu/exdatetime.png?branch=master)](https://travis-ci.org/mururu/exdatetime)
+# DateTime Library for Elixir
 
 A date and time library for Elixir.
-For now this is under development.
+WIP
 
 ## Example
 
 ```elixir
-iex(1)> time = DateTime.now
-2013-04-21 05:36:55+09:00
+iex(1)> time = Calendar.local_time
+2013-07-10 02:49:11+09:00
 
 iex(2)> time.hour
-5
+2
 
-iex(3)> time.plus(days: 10, hours: 3)
-2013-05-01 08:36:55+09:00
+iex(3)> Calendar.plus(time, days: 10, hours: 3)
+2013-07-20 05:49:45+09:00
 
-iex(4)> time.strftime("%b %d %Y at %I:%M %p")
-"Apr 21 2013 at 05:36 AM"
+iex(4)> Calendar.format(time, "EE, dd MMM YYYY HH:mm:ss Z")
+"Wed, 10 Jul 2013 02:49:45 +0900"
 
-iex(5)> time.new_offset({-2,30})
-2013-04-20 18:06:55-02:30
+iex(5)> Calendar.change_offset(time, {-2,30})
+2013-07-09 15:19:45-02:30
 
-iex(6)> time1 = DateTime.now
-2013-04-21 05:37:28+09:00
+iex(6)> time1 = Calendar.local_time
+2013-07-10 02:52:07+09:00
 
-iex(7)> time2 = DateTime.now
-2013-04-21 05:37:33+09:00
+iex(7)> time2 = Calendar.local_time
+2013-07-10 02:52:15+09:00
 
 iex(8)> time2.is_after? time1
 true
+
+iex(9)> Calendar.parse("Fri, 01 Mar 2013 20:03:15 -0330", "EE, dd MMM YYYY HH:mm:ss Z")
+2013-03-01 20:03:15-03:30
 ```
 
 ## License
