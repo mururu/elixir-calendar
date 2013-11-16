@@ -274,7 +274,7 @@ defmodule Calendar do
   end
 
   defp do_minus(time = DateTime[], list) do
-    list = Enum.map(list, -&1)
+    list = Enum.map(list, &(-&1))
     do_plus(time, list)
   end
 
@@ -414,7 +414,7 @@ defmodule Calendar do
 
   defp do_parse(string, formatter) do
     regex = compile_to_regex(formatter)
-    list = Regex.captures(regex, string) || []
+    list = Regex.named_captures(regex, string) || []
     build_datetime(list)
   end
 
@@ -521,12 +521,12 @@ defmodule Calendar do
   end
 
   def build(:ZZ, value) do
-    tokens = Regex.captures(%r/(?<sign>(\+|-))(?<hour>\d{2}):(?<minute>\d{2})/g, value)
+    tokens = Regex.named_captures(%r/(?<sign>(\+|-))(?<hour>\d{2}):(?<minute>\d{2})/g, value)
     build_offset(tokens)
   end
 
   def build(:Z, value) do
-    tokens = Regex.captures(%r/(?<sign>(\+|-))(?<hour>\d{2})(?<minute>\d{2})/g, value)
+    tokens = Regex.named_captures(%r/(?<sign>(\+|-))(?<hour>\d{2})(?<minute>\d{2})/g, value)
     build_offset(tokens)
   end
 
@@ -999,7 +999,7 @@ defmodule Calendar do
   defp leap_year_yday_offset(12), do: 335
 end
 
-defimpl Binary.Inspect, for: DateTime do
+defimpl Inspect, for: DateTime do
   import Kernel, except: [inspect: 2]
 
   def inspect(DateTime[year: year, month: month, day: day,
