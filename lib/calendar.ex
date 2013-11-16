@@ -488,9 +488,9 @@ defmodule Calendar do
   end
 
   ## TODO
-  def build(:a, value) do
-    nil
-  end
+  #def build(:a, value) do
+  #  nil
+  #end
 
   def build(:mm, value) do
     { :minute, binary_to_integer(value) }
