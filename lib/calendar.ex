@@ -9,7 +9,7 @@ defmodule Calendar do
   Universal Time
   """
   def universal_time do
-    now = :erlang.now
+    now = :os.timestamp
 
     {{ year, month, day }, { hour, minute, second }} = C.now_to_universal_time(now)
     { _megasecond, _second, microsecond } = now
@@ -23,7 +23,7 @@ defmodule Calendar do
   Local Time
   """
   def local_time do
-    now = :erlang.now
+    now = :os.timestamp
 
     {{ year, month, day }, { hour, minute, second }} = C.now_to_local_time(now)
     { _megasecond, _second, microsecond } = now
