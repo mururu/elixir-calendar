@@ -1,0 +1,9 @@
+{application,calendar,
+             [{registered,[]},
+              {description,"calendar"},
+              {vsn,"0.0.1"},
+              {modules,['Elixir.Binary.Inspect.DateTime',
+                        'Elixir.Calendar.TimeZone.Loader',
+                        'Elixir.Calendar.TimeZone','Elixir.Calendar',
+                        'Elixir.DateTime']},
+              {applications,[kernel,stdlib,elixir]}]}.
