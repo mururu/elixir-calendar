@@ -392,7 +392,7 @@ defmodule Calendar do
     do_format_escape(t, rest)
   end
 
-  defp do_format(DateTime[] = t, << h, rest :: binary >>) when not (h in ?a..?z or h in ?A..?Z) do
+  defp do_format(DateTime[] = t, << h, rest :: binary >>) do
     << h, do_format(t, rest) :: binary >>
   end
 
@@ -851,7 +851,7 @@ defmodule Calendar do
     compile_to_regex_escape(rest, list)
   end
 
-  defp compile_to_regex(<< h, rest :: binary >>, list) when not (h in ?a..?z or h in ?A..?Z) do
+  defp compile_to_regex(<< h, rest :: binary >>, list) do
     compile_to_regex(rest, [<< h >>|list])
   end
 
