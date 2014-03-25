@@ -521,12 +521,12 @@ defmodule Calendar do
   end
 
   def build(:ZZ, value) do
-    tokens = Regex.named_captures(%r/(?<sign>(\+|-))(?<hour>\d{2}):(?<minute>\d{2})/g, value)
+    tokens = Regex.named_captures(~r/(?<sign>(\+|-))(?<hour>\d{2}):(?<minute>\d{2})/g, value)
     build_offset(tokens)
   end
 
   def build(:Z, value) do
-    tokens = Regex.named_captures(%r/(?<sign>(\+|-))(?<hour>\d{2})(?<minute>\d{2})/g, value)
+    tokens = Regex.named_captures(~r/(?<sign>(\+|-))(?<hour>\d{2})(?<minute>\d{2})/g, value)
     build_offset(tokens)
   end
 
